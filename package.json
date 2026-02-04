@@ -1,0 +1,9 @@
+{
+  "name": "stanford-session1",
+  "version": "1.0.0",
+  "description": "Gestion des présences Stanford",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}

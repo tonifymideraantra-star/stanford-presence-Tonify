@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STANFORD SESSION 1 - Gestion des Présences</title>
+    
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header { 
+            background: var(--primary-color);
+            color: white; 
+            padding: 20px 30px; 
+            position: relative;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/Stanford_University_seal_2003.svg/200px-Stanford_University_seal_2003.svg.png');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .app-title {
+            font-size: 28px;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .app-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 5px 0 0 0;
+        }
+        
+        .header-buttons { 
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .header-buttons button { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-import { background: var(--info-color); color: white; }
+        .btn-export { background: var(--success-color); color: white; }
+        .btn-clear { background: var(--danger-color); color: white; }
+        .btn-settings { background: var(--warning-color); color: black; }
+        
+        .header-buttons button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        .stats { 
+            background: var(--light-color); 
+            padding: 15px 30px; 
+            display: flex; 
+            justify-content: space-between;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .main { 
+            display: flex; 
+            gap: 20px; 
+            margin-top: 0;
+            padding: 20px;
+        }
+        
+        .left { 
+            flex: 3; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .right { 
+            flex: 1; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search { 
+            width: 100%; 
+            padding: 12px 20px 12px 45px; 
+            border: 2px solid #dee2e6; 
+            border-radius: 25px; 
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .invite-list { 
+            max-height: 600px; 
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+        
+        .invite { 
+            padding: 15px; 
+            border-bottom: 1px solid #e9ecef; 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        
+        .invite:hover { background: #f8f9fa; }
+        .invite.present { 
+            background: #d4edda; 
+            border-left-color: var(--success-color);
+        }
+        
+        .invite-info { flex: 1; }
+        
+        .invite-name { 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+        
+        .invite-details { 
+            font-size: 14px; 
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+        
+        .invite-email { 
+            font-size: 12px; 
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .invite-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        button { 
+            padding: 8px 15px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-present { background: var(--success-color); color: white; }
+        .btn-present.checked { background: #6c757d; }
+        .btn-edit { background: var(--warning-color); color: black; }
+        .btn-delete { background: var(--danger-color); color: white; }
+        .btn-add { background: var(--secondary-color); color: white; width: 100%; padding: 12px; margin-top: 10px; }
+        
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 5px 0 15px 0; 
+            border: 1px solid #ced4da; 
+            border-radius: 5px; 
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+        
+        .file-input { display: none; }
+        
+        .file-label { 
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px; 
+            background: var(--info-color); 
+            color: white; 
+            border-radius: 25px; 
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .file-label:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        .settings-panel {
+            background: var(--light-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .settings-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .color-option.selected {
+            border-color: var(--dark-color);
+            transform: scale(1.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 992px) {
+            .main { flex-direction: column; }
+            .left, .right { width: 100%; }
+        }
+        
+        /* Indicateur de connexion */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1001;
+        }
+        .connected { background: #28a745; color: white; }
+        .disconnected { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <div class="connection-status disconnected" id="connectionStatus">🔴 Déconnecté</div>
+    
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <div class="logo" id="appLogo">S1</div>
+                <div>
+                    <h1 class="app-title" id="appTitle">STANFORD SESSION 1</h1>
+                    <p class="app-subtitle">Gestion des présences professionnelles</p>
+                </div>
+            </div>
+            
+            <div class="header-buttons">
+                <label class="file-label">
+                    📁 <span>IMPORTER LISTE CSV</span>
+                    <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.xls" onchange="importerFichier(event)">
+                </label>
+                <button class="btn-export" onclick="exporterDonnees()">
+                    📥 EXPORTER PRÉSENCES
+                </button>
+                <button class="btn-settings" onclick="ouvrirSettings()">
+                    ⚙️ PARAMÈTRES
+                </button>
+                <button class="btn-clear" onclick="reinitialiserListe()">
+                    🗑️ RÉINITIALISER
+                </button>
+            </div>
+        </header>
+        
+        <div class="stats">
+            <div>Total: <span id="totalCount">0</span></div>
+            <div style="color:var(--success-color)">Présents: <span id="presentCount">0</span></div>
+            <div style="color:var(--danger-color)">Absents: <span id="absentCount">0</span></div>
+        </div>
+        
+        <div class="main">
+            <div class="left">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search" id="searchInput" placeholder="Rechercher un invité...">
+                </div>
+                
+                <div class="invite-list" id="invitesList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <h3>Aucune liste importée</h3>
+                        <p>Importez votre liste CSV ou ajoutez des invités manuellement</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right">
+                <h3 style="color:var(--primary-color); margin-top:0;">➕ AJOUT MANUEL</h3>
+                
+                <label>Civilité</label>
+                <select id="civilite">
+                    <option value="M.">Monsieur</option>
+                    <option value="Mme">Madame</option>
+                </select>
+                
+                <label>Nom et Prénom *</label>
+                <input type="text" id="nomComplet" placeholder="Ex: Dupont Jean" required>
+                
+                <label>Fonction</label>
+                <input type="text" id="fonction" placeholder="Ex: Directeur">
+                
+                <label>Entreprise *</label>
+                <input type="text" id="entreprise" placeholder="Ex: Société ABC" required>
+                
+                <label>Email</label>
+                <input type="email" id="email" placeholder="exemple@entreprise.com">
+                
+                <button class="btn-add" onclick="ajouterNouvelInvite()">
+                    ✅ Enregistrer la présence
+                </button>
+                
+                <div class="settings-panel">
+                    <div class="settings-title">
+                        <span>⚙️</span> Paramètres rapides
+                    </div>
+                    <label>Nom de l'événement</label>
+                    <input type="text" id="eventName" value="STANFORD SESSION 1" onchange="changerNomEvenement()">
+                    
+                    <label>Logo (URL de l'image)</label>
+                    <input type="text" id="logoUrl" placeholder="https://..." onchange="changerLogo()">
+                    
+                    <div style="margin-top:15px;">
+                        <label>Couleur du thème</label>
+                        <div class="color-picker">
+                            <div class="color-option selected" style="background:#2c3e50;" onclick="changerCouleur('#2c3e50')"></div>
+                            <div class="color-option" style="background:#3498db;" onclick="changerCouleur('#3498db')"></div>
+                            <div class="color-option" style="background:#e74c3c;" onclick="changerCouleur('#e74c3c')"></div>
+                            <div class="color-option" style="background:#2ecc71;" onclick="changerCouleur('#2ecc71')"></div>
+                            <div class="color-option" style="background:#9b59b6;" onclick="changerCouleur('#9b59b6')"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal modification -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h3 class="modal-title">✏️ MODIFIER L'INVITÉ</h3>
+            <input type="hidden" id="editId">
+            
+            <label>Civilité</label>
+            <select id="editCivilite">
+                <option value="M.">Monsieur</option>
+                <option value="Mme">Madame</option>
+            </select>
+            
+            <label>Nom et Prénom *</label>
+            <input type="text" id="editNom" required>
+            
+            <label>Fonction</label>
+            <input type="text" id="editFonction">
+            
+            <label>Entreprise *</label>
+            <input type="text" id="editEntreprise" required>
+            
+            <label>Email</label>
+            <input type="email" id="editEmail">
+            
+            <div class="form-actions">
+                <button class="btn-present" onclick="sauvegarderModification()">
+                    💾 Enregistrer
+                </button>
+                <button class="btn-delete" onclick="fermerModal()">
+                    ❌ Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// === CONFIGURATION FIREBASE EXACTE ===
+const firebaseConfig = {
+    apiKey: "AIzaSyBQcMeLxAaSn9iSGRAcbg5TLBVEhcyK0Os",
+    authDomain: "stanford-a16d4.firebaseapp.com",
+    databaseURL: "https://stanford-a16d4-default-rtdb.firebaseio.com",
+    projectId: "stanford-a16d4",
+    storageBucket: "stanford-a16d4.firebasestorage.app",
+    messagingSenderId: "1014800999363",
+    appId: "1:1014800999363:web:64660ae2-475d-4046-ab52-df082daf5c03"
+};
+
+// === INITIALISATION FIREBASE ===
+let database;
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    database = firebase.database();
+    console.log("✅ Firebase initialisé avec succès");
+} catch (error) {
+    console.error("❌ Erreur Firebase:", error);
+}
+
+// Données des invités
+let invites = [];
+let nextId = 1;
+
+// === FONCTIONS FIREBASE ===
+
+// Vérifier la connexion Firebase
+function verifierConnexionFirebase() {
+    if (!database) return;
+    
+    const connectedRef = database.ref(".info/connected");
+    connectedRef.on("value", (snap) => {
+        const status = document.getElementById('connectionStatus');
+        if (snap.val() === true) {
+            status.textContent = "✅ Connecté à Firebase";
+            status.className = "connection-status connected";
+            console.log("✅ Connecté à Firebase");
+        } else {
+            status.textContent = "🔴 Déconnecté - Mode local";
+            status.className = "connection-status disconnected";
+            console.log("⚠️ Déconnecté de Firebase - Mode local");
+        }
+    });
+}
+
+// Charger depuis Firebase en temps réel
+function chargerDepuisFirebase() {
+    if (!database) {
+        console.log("⚠️ Firebase non disponible, chargement local");
+        chargerDonneesSauvegardees();
+        return;
+    }
+    
+    console.log("🔄 Connexion à Firebase...");
+    
+    database.ref('invites').on('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (data !== null && data !== undefined) {
+            // Convertir en tableau si c'est un objet
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                invites = Object.values(data);
+            } else {
+                invites = data || [];
+            }
+            
+            // Calculer le prochain ID
+            if (invites.length > 0) {
+                const ids = invites.map(i => i.id).filter(id => id !== undefined);
+                if (ids.length > 0) {
+                    nextId = Math.max(...ids) + 1;
+                }
+            }
+            
+            console.log(`✅ ${invites.length} invités chargés depuis Firebase`);
+            chargerInvites();
+        } else {
+            invites = [];
+            nextId = 1;
+            console.log("ℹ️ Base de données Firebase vide");
+            chargerInvites();
+        }
+    }, (error) => {
+        console.error("❌ Erreur Firebase:", error);
+        chargerDonneesSauvegardees();
+    });
+}
+
+// Sauvegarder sur Firebase
+function sauvegarderSurFirebase() {
+    if (!database) {
+        console.log("⚠️ Firebase non disponible, sauvegarde locale");
+        sauvegarderDonneesLocale();
+        return;
+    }
+    
+    database.ref('invites').set(invites)
+        .then(() => {
+            console.log("✅ Données synchronisées sur Firebase");
+            sauvegarderDonneesLocale(); // Backup local
+        })
+        .catch(error => {
+            console.error("❌ Erreur Firebase:", error);
+            sauvegarderDonneesLocale(); // Fallback local
+        });
+}
+
+// Sauvegarde locale
+function sauvegarderDonneesLocale() {
+    localStorage.setItem('stanford_invites', JSON.stringify(invites));
+    localStorage.setItem('stanford_nextId', nextId.toString());
+}
+
+// === FONCTIONS PRINCIPALES ===
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("🚀 Application STANFORD initialisée");
+    
+    // Vérifier la connexion Firebase
+    verifierConnexionFirebase();
+    
+    // Charger les données
+    chargerDepuisFirebase();
+    
+    // Écouteur de recherche
+    document.getElementById('searchInput').addEventListener('input', chargerInvites);
+    
+    // Charger les paramètres
+    chargerParametres();
+});
+
+// Charger la liste des invités
+function chargerInvites() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const liste = document.getElementById('invitesList');
+    
+    if (invites.length === 0) {
+        liste.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <h3>Aucune liste importée</h3>
+                <p>Importez votre liste CSV ou ajoutez des invités manuellement</p>
+            </div>
+        `;
+        mettreAJourStats();
+        return;
+    }
+    
+    const filtres = invites.filter(i => 
+        i.nom.toLowerCase().includes(search) || 
+        i.entreprise.toLowerCase().includes(search) ||
+        (i.fonction && i.fonction.toLowerCase().includes(search)) ||
+        (i.email && i.email.toLowerCase().includes(search))
+    );
+    
+    if (filtres.length === 0) {
+        liste.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><h3>Aucun résultat</h3></div>';
+        mettreAJourStats();
+        return;
+    }
+    
+    let html = '';
+    filtres.forEach(invite => {
+        html += `
+            <div class="invite ${invite.present ? 'present' : ''}" data-id="${invite.id}">
+                <div class="invite-info">
+                    <div class="invite-name">${invite.civilite} ${invite.nom}</div>
+                    <div class="invite-details">${invite.fonction} - ${invite.entreprise}</div>
+                    ${invite.email ? `<div class="invite-email">${invite.email}</div>` : ''}
+                </div>
+                <div class="invite-actions">
+                    <button class="btn-present ${invite.present ? 'checked' : ''}" onclick="togglePresence(${invite.id})">
+                        ${invite.present ? '✓' : '👤'} ${invite.present ? 'PRÉSENT' : 'PRÉSENT'}
+                    </button>
+                    <button class="btn-edit" onclick="ouvrirModalModification(${invite.id})">
+                        ✏️
+                    </button>
+                    <button class="btn-delete" onclick="supprimerInvite(${invite.id})">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    liste.innerHTML = html;
+    mettreAJourStats();
+}
+
+// Marquer présence
+function togglePresence(id) {
+    const invite = invites.find(i => i.id === id);
+    if (invite) {
+        invite.present = !invite.present;
+        if (invite.present) {
+            invite.heureArrivee = new Date().toLocaleTimeString('fr-FR');
+            invite.dateArrivee = new Date().toLocaleDateString('fr-FR');
+        }
+        sauvegarderSurFirebase();
+        chargerInvites();
+    }
+}
+
+// Ouvrir modal modification
+function ouvrirModalModification(id) {
+    const invite = invites.find(i => i.id === id);
+    if (invite) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editCivilite').value = invite.civilite;
+        document.getElementById('editNom').value = invite.nom;
+        document.getElementById('editFonction').value = invite.fonction;
+        document.getElementById('editEntreprise').value = invite.entreprise;
+        document.getElementById('editEmail').value = invite.email || '';
+        document.getElementById('editModal').style.display = 'flex';
+    }
+}
+
+// Sauvegarder modification
+function sauvegarderModification() {
+    const id = parseInt(document.getElementById('editId').value);
+    const invite = invites.find(i => i.id === id);
+    
+    if (invite) {
+        invite.civilite = document.getElementById('editCivilite').value;
+        invite.nom = document.getElementById('editNom').value.toUpperCase();
+        invite.fonction = document.getElementById('editFonction').value;
+        invite.entreprise = document.getElementById('editEntreprise').value;
+        invite.email = document.getElementById('editEmail').value;
+        
+        sauvegarderSurFirebase();
+        chargerInvites();
+        fermerModal();
+        alert('✅ Invité modifié avec succès !');
+    }
+}
+
+// Supprimer invité
+function supprimerInvite(id) {
+    if (confirm('⚠️ Voulez-vous vraiment supprimer cet invité ?')) {
+        invites = invites.filter(i => i.id !== id);
+        sauvegarderSurFirebase();
+        chargerInvites();
+        alert('✅ Invité supprimé avec succès !');
+    }
+}
+
+// Fermer modal
+function fermerModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// Mettre à jour statistiques
+function mettreAJourStats() {
+    const total = invites.length;
+    const presents = invites.filter(i => i.present).length;
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('presentCount').textContent = presents;
+    document.getElementById('absentCount').textContent = total - presents;
+}
+
+// Ajouter nouvel invité
+function ajouterNouvelInvite() {
+    const civilite = document.getElementById('civilite').value;
+    const nom = document.getElementById('nomComplet').value.trim();
+    const fonction = document.getElementById('fonction').value.trim();
+    const entreprise = document.getElementById('entreprise').value.trim();
+    const email = document.getElementById('email').value.trim();
+    
+    if (!nom || !entreprise) {
+        alert("❌ Veuillez remplir au moins le nom et l'entreprise");
+        return;
+    }
+    
+    const nouvelInvite = {
+        id: nextId++,
+        civilite,
+        nom: nom.toUpperCase(),
+        fonction: fonction || "Non spécifié",
+        entreprise,
+        email,
+        present: true,
+        preinscrit: false,
+        heureArrivee: new Date().toLocaleTimeString('fr-FR'),
+        dateArrivee: new Date().toLocaleDateString('fr-FR')
+    };
+    
+    invites.push(nouvelInvite);
+    
+    document.getElementById('nomComplet').value = '';
+    document.getElementById('fonction').value = '';
+    document.getElementById('entreprise').value = '';
+    document.getElementById('email').value = '';
+    
+    sauvegarderSurFirebase();
+    chargerInvites();
+    alert(`✅ ${civilite} ${nom} ajouté(e) avec succès !`);
+}
+
+// IMPORTER FICHIER CSV
+function importerFichier(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        traiterCSV(content);
+        sauvegarderSurFirebase();
+    };
+    
+    if (file.name.endsWith('.csv')) {
+        reader.readAsText(file, 'UTF-8');
+    } else {
+        alert("❌ Format non supporté. Utilisez un fichier CSV.");
+    }
+}
+
+// Traiter le CSV
+function traiterCSV(csvText) {
+    const lignes = csvText.split('\n');
+    const nouveauxInvites = [];
+    
+    const separateur = csvText.includes(';') ? ';' : ',';
+    
+    for (let i = 0; i < lignes.length; i++) {
+        const ligne = lignes[i].trim();
+        if (!ligne || ligne.startsWith('"')) continue;
+        
+        const colonnes = ligne.split(separateur).map(c => c.trim().replace(/"/g, ''));
+        
+        if (colonnes.length >= 4) {
+            const invite = {
+                id: nextId++,
+                civilite: colonnes[0] || "M.",
+                nom: (colonnes[1] || "").toUpperCase(),
+                fonction: colonnes[2] || "",
+                entreprise: colonnes[3] || "",
+                email: colonnes[4] || "",
+                present: false,
+                preinscrit: true
+            };
+            
+            nouveauxInvites.push(invite);
+        }
+    }
+    
+    if (nouveauxInvites.length > 0) {
+        invites = invites.concat(nouveauxInvites);
+        sauvegarderSurFirebase();
+        chargerInvites();
+        alert(`✅ ${nouveauxInvites.length} invités importés avec succès !`);
+    } else {
+        alert("❌ Aucune donnée valide trouvée dans le fichier.");
+    }
+}
+
+// Exporter données
+function exporterDonnees() {
+    if (invites.length === 0) {
+        alert("❌ Aucun invité à exporter");
+        return;
+    }
+    
+    let csv = "Civilité;Nom;Fonction;Entreprise;Email;Pré-inscrit;Présent;Heure d'arrivée;Date\n";
+    
+    invites.forEach(invite => {
+        csv += `"${invite.civilite}";"${invite.nom}";"${invite.fonction}";"${invite.entreprise}";"${invite.email || ''}";"${invite.preinscrit ? 'Oui' : 'Non'}";"${invite.present ? 'Oui' : 'Non'}";"${invite.heureArrivee || ''}";"${invite.dateArrivee || ''}"\n`;
+    });
+    
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `presences_${document.getElementById('appTitle').textContent.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    
+    alert(`✅ ${invites.length} invité(s) exporté(s) !`);
+}
+
+// Réinitialiser la liste
+function reinitialiserListe() {
+    if (confirm("⚠️ Voulez-vous vraiment effacer toutes les données ? Cette action est irréversible.")) {
+        if (database) {
+            database.ref('invites').remove()
+                .then(() => {
+                    invites = [];
+                    nextId = 1;
+                    localStorage.removeItem('stanford_invites');
+                    localStorage.removeItem('stanford_nextId');
+                    chargerInvites();
+                    alert("✅ Liste réinitialisée avec succès !");
+                })
+                .catch(error => {
+                    console.error("❌ Erreur réinitialisation Firebase:", error);
+                    invites = [];
+                    nextId = 1;
+                    localStorage.removeItem('stanford_invites');
+                    localStorage.removeItem('stanford_nextId');
+                    chargerInvites();
+                    alert("✅ Liste réinitialisée (localement) !");
+                });
+        } else {
+            invites = [];
+            nextId = 1;
+            localStorage.removeItem('stanford_invites');
+            localStorage.removeItem('stanford_nextId');
+            chargerInvites();
+            alert("✅ Liste réinitialisée (localement) !");
+        }
+    }
+}
+
+// CHARGER les données sauvegardées (fallback)
+function chargerDonneesSauvegardees() {
+    const savedInvites = localStorage.getItem('stanford_invites');
+    const savedNextId = localStorage.getItem('stanford_nextId');
+    
+    if (savedInvites) {
+        try {
+            invites = JSON.parse(savedInvites);
+            nextId = parseInt(savedNextId) || invites.length + 1;
+            chargerInvites();
+            console.log("✅ Données chargées depuis localStorage");
+        } catch (error) {
+            console.error("❌ Erreur chargement localStorage:", error);
+        }
+    }
+}
+
+// CHARGER les paramètres
+function chargerParametres() {
+    const eventName = localStorage.getItem('stanford_eventName');
+    const logoUrl = localStorage.getItem('stanford_logoUrl');
+    const primaryColor = localStorage.getItem('stanford_primaryColor');
+    
+    if (eventName) document.getElementById('appTitle').textContent = eventName;
+    if (eventName) document.getElementById('eventName').value = eventName;
+    if (logoUrl) document.getElementById('appLogo').style.backgroundImage = `url('${logoUrl}')`;
+    if (logoUrl) document.getElementById('logoUrl').value = logoUrl;
+    if (primaryColor) changerCouleur(primaryColor, false);
+}
+
+// Changer nom événement
+function changerNomEvenement() {
+    const newName = document.getElementById('eventName').value;
+    document.getElementById('appTitle').textContent = newName;
+    localStorage.setItem('stanford_eventName', newName);
+}
+
+// Changer logo
+function changerLogo() {
+    const logoUrl = document.getElementById('logoUrl').value;
+    if (logoUrl) {
+        document.getElementById('appLogo').style.backgroundImage = `url('${logoUrl}')`;
+        localStorage.setItem('stanford_logoUrl', logoUrl);
+    }
+}
+
+// Changer couleur
+function changerCouleur(color, save = true) {
+    document.documentElement.style.setProperty('--primary-color', color);
+    
+    // Mettre à jour les sélections
+    document.querySelectorAll('.color-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.style.backgroundColor === color || 
+            getComputedStyle(opt).backgroundColor === rgbToHex(color)) {
+            opt.classList.add('selected');
+        }
+    });
+    
+    if (save) {
+        localStorage.setItem('stanford_primaryColor', color);
+    }
+}
+
+// Convertir RGB en Hex
+function rgbToHex(rgb) {
+    const rgbValues = rgb.match(/\d+/g);
+    if (!rgbValues) return rgb;
+    
+    return '#' + rgbValues.map(x => {
+        const hex = parseInt(x).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+}
+
+// Ouvrir paramètres
+function ouvrirSettings() {
+    alert("⚙️ Les paramètres sont disponibles dans le panneau à droite.\n\nVous pouvez :\n- Changer le nom de l'événement\n- Modifier le logo\n- Changer la couleur du thème");
+}
+
+// Sauvegarde automatique toutes les 10 secondes
+setInterval(() => {
+    if (invites.length > 0) {
+        sauvegarderSurFirebase();
+    }
+}, 10000);
+    </script>
+</body>
+</html>
