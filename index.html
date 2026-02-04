@@ -7,7 +7,42 @@
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.0/firebase-app.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.0/firebase-database.min.js"></script>
+  <script>
+// VÉRIFICATION CDN FIREBASE
+setTimeout(() => {
+    const statusEl = document.getElementById('connectionStatus');
     
+    if (typeof firebase === 'undefined') {
+        console.error("❌ ÉCHEC : Firebase SDK non chargé");
+        statusEl.textContent = "❌ Firebase bloqué - Mode local";
+        statusEl.style.background = "#ff9800";
+        
+        // Charger depuis un autre CDN en urgence
+        console.log("🔄 Tentative de chargement alternatif...");
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = 'https://unpkg.com/firebase@10.7.0/dist/firebase-app.js';
+        fallbackScript.onload = () => {
+            const script2 = document.createElement('script');
+            script2.src = 'https://unpkg.com/firebase@10.7.0/dist/firebase-database.js';
+            script2.onload = () => {
+                console.log("✅ Firebase chargé via fallback !");
+                statusEl.textContent = "✅ Firebase chargé (fallback)";
+                statusEl.style.background = "#4CAF50";
+                // Initialiser Firebase maintenant
+                if (window.firebase && window.initializeFirebase) {
+                    initializeFirebase();
+                }
+            };
+            document.head.appendChild(script2);
+        };
+        document.head.appendChild(fallbackScript);
+    } else {
+        console.log("✅ Firebase SDK chargé avec succès");
+        statusEl.textContent = "✅ Firebase prêt";
+        statusEl.style.background = "#4CAF50";
+    }
+}, 2000);
+</script>  
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -514,62 +549,70 @@ const firebaseConfig = {
 // === INITIALISATION FIREBASE ===
 let database;
 
-// Initialisation SIMPLIFIÉE et ROBUSTE
-function initializeFirebase() {
+// === INITIALISATION FIREBASE SIMPLIFIÉE ===
+let database = null;
+let firebaseReady = false;
+
+// Fonction d'initialisation unique
+function initFirebase() {
     try {
-        console.log("🔄 Tentative d'initialisation Firebase...");
+        console.log("🚀 Initialisation Firebase...");
         
-        // OPTION 1 : Si Firebase n'est pas chargé
+        // 1. Vérifier que Firebase est chargé
         if (typeof firebase === 'undefined') {
-            console.error("❌ Firebase SDK non chargé !");
-            document.getElementById('connectionStatus').textContent = "❌ Firebase non chargé";
-            return;
+            throw new Error("Firebase SDK non disponible");
         }
         
-        // OPTION 2 : Initialiser proprement
-        let app;
-        if (!firebase.apps.length) {
-            app = firebase.initializeApp(firebaseConfig);
-            console.log("✅ Nouvelle instance Firebase créée");
-        } else {
-            app = firebase.app(); // Utiliser l'instance existante
-            console.log("✅ Instance Firebase existante réutilisée");
-        }
+        // 2. Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAn21nmADgVyYWQn0WnqojVu5YRWs-FvQU",
+            authDomain: "stanford-presence.firebaseapp.com",
+            databaseURL: "https://stanford-presence-default-rtdb.firebaseio.com",
+            projectId: "stanford-presence",
+            storageBucket: "stanford-presence.firebasestorage.app",
+            messagingSenderId: "747558380518",
+            appId: "1:747558380518:web:c8f3e4d25ffa404e68ac27"
+        };
         
-        // Obtenir la base de données
+        // 3. Initialiser
+        const app = firebase.initializeApp(firebaseConfig);
         database = firebase.database(app);
-        console.log("✅ Database obtenue, URL :", firebaseConfig.databaseURL);
         
-        // Vérifier la connexion en temps réel
+        console.log("✅ Firebase initialisé :", firebaseConfig.databaseURL);
+        firebaseReady = true;
+        
+        // 4. Surveiller la connexion
         const connectedRef = database.ref(".info/connected");
-        connectedRef.on("value", function(snap) {
-            const status = document.getElementById('connectionStatus');
+        connectedRef.on("value", (snap) => {
+            const statusEl = document.getElementById('connectionStatus');
             if (snap.val() === true) {
-                status.textContent = "✅ Connecté à Firebase";
-                status.className = "connection-status connected";
-                console.log("🔥 Connexion Firebase ACTIVE");
+                statusEl.textContent = "✅ Connecté à Firebase";
+                statusEl.className = "connection-status connected";
+                console.log("🔥 Connexion Firebase active");
+                
+                // Charger les données
+                chargerDepuisFirebase();
             } else {
-                status.textContent = "🔴 Déconnecté";
-                status.className = "connection-status disconnected";
-                console.log("⚠️ Déconnecté de Firebase");
+                statusEl.textContent = "🔄 Connexion en cours...";
+                statusEl.style.background = "#ff9800";
             }
         });
         
-        // Forcer une première vérification
-        connectedRef.once('value');
+        return true;
         
     } catch (error) {
-        console.error("❌ ERREUR CRITIQUE Firebase :", error);
-        document.getElementById('connectionStatus').textContent = "❌ Erreur Firebase";
+        console.error("❌ Impossible d'initialiser Firebase :", error.message);
+        document.getElementById('connectionStatus').textContent = "🔶 Mode local uniquement";
+        document.getElementById('connectionStatus').style.background = "#ff9800";
         
-        // Mode secours : localStorage
-        console.warn("⚠️ Passage en mode localStorage");
+        // Mode local
         chargerDonneesSauvegardees();
+        return false;
     }
 }
 
-// Initialiser Firebase après le chargement de la page
-setTimeout(initializeFirebase, 1000);
+// Démarrer l'initialisation après 3 secondes
+setTimeout(initFirebase, 3000);
 // Données des invités
 let invites = [];
 let nextId = 1;
@@ -640,21 +683,48 @@ function chargerDepuisFirebase() {
 
 // Sauvegarder sur Firebase
 function sauvegarderSurFirebase() {
-    if (!database) {
-        console.log("⚠️ Firebase non disponible, sauvegarde locale");
+    if (firebaseReady && database) {
+        // Sauvegarder sur Firebase
+        database.ref('invites').set(invites)
+            .then(() => console.log("✅ Données Firebase sauvegardées"))
+            .catch(err => {
+                console.error("❌ Erreur Firebase, sauvegarde locale:", err);
+                sauvegarderDonneesLocale();
+            });
+    } else {
+        // Mode local seulement
         sauvegarderDonneesLocale();
-        return;
     }
-    
-    database.ref('invites').set(invites)
-        .then(() => {
-            console.log("✅ Données synchronisées sur Firebase");
-            sauvegarderDonneesLocale(); // Backup local
-        })
-        .catch(error => {
-            console.error("❌ Erreur Firebase:", error);
-            sauvegarderDonneesLocale(); // Fallback local
+}
+
+function chargerDepuisFirebase() {
+    if (firebaseReady && database) {
+        database.ref('invites').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                invites = Array.isArray(data) ? data : Object.values(data);
+                chargerInvites();
+                console.log(`✅ ${invites.length} invités chargés depuis Firebase`);
+            }
         });
+    } else {
+        chargerDonneesSauvegardees();
+    }
+}
+
+function sauvegarderDonneesLocale() {
+    localStorage.setItem('stanford_invites', JSON.stringify(invites));
+    localStorage.setItem('stanford_nextId', nextId.toString());
+}
+
+function chargerDonneesSauvegardees() {
+    const saved = localStorage.getItem('stanford_invites');
+    if (saved) {
+        invites = JSON.parse(saved);
+        nextId = parseInt(localStorage.getItem('stanford_nextId')) || invites.length + 1;
+        chargerInvites();
+        console.log(`📂 ${invites.length} invités chargés localement`);
+    }
 }
 
 // Sauvegarde locale
