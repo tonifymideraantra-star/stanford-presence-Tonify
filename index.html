@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STANFORD SESSION 1 - Gestion des Présences</title>
     
-    <!-- FIREBASE SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.0/firebase-app.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.0/firebase-database.min.js"></script>
     
     <style>
         :root {
@@ -514,16 +513,63 @@ const firebaseConfig = {
 
 // === INITIALISATION FIREBASE ===
 let database;
-try {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+
+// Initialisation SIMPLIFIÉE et ROBUSTE
+function initializeFirebase() {
+    try {
+        console.log("🔄 Tentative d'initialisation Firebase...");
+        
+        // OPTION 1 : Si Firebase n'est pas chargé
+        if (typeof firebase === 'undefined') {
+            console.error("❌ Firebase SDK non chargé !");
+            document.getElementById('connectionStatus').textContent = "❌ Firebase non chargé";
+            return;
+        }
+        
+        // OPTION 2 : Initialiser proprement
+        let app;
+        if (!firebase.apps.length) {
+            app = firebase.initializeApp(firebaseConfig);
+            console.log("✅ Nouvelle instance Firebase créée");
+        } else {
+            app = firebase.app(); // Utiliser l'instance existante
+            console.log("✅ Instance Firebase existante réutilisée");
+        }
+        
+        // Obtenir la base de données
+        database = firebase.database(app);
+        console.log("✅ Database obtenue, URL :", firebaseConfig.databaseURL);
+        
+        // Vérifier la connexion en temps réel
+        const connectedRef = database.ref(".info/connected");
+        connectedRef.on("value", function(snap) {
+            const status = document.getElementById('connectionStatus');
+            if (snap.val() === true) {
+                status.textContent = "✅ Connecté à Firebase";
+                status.className = "connection-status connected";
+                console.log("🔥 Connexion Firebase ACTIVE");
+            } else {
+                status.textContent = "🔴 Déconnecté";
+                status.className = "connection-status disconnected";
+                console.log("⚠️ Déconnecté de Firebase");
+            }
+        });
+        
+        // Forcer une première vérification
+        connectedRef.once('value');
+        
+    } catch (error) {
+        console.error("❌ ERREUR CRITIQUE Firebase :", error);
+        document.getElementById('connectionStatus').textContent = "❌ Erreur Firebase";
+        
+        // Mode secours : localStorage
+        console.warn("⚠️ Passage en mode localStorage");
+        chargerDonneesSauvegardees();
     }
-    database = firebase.database();
-    console.log("✅ Firebase initialisé avec succès");
-} catch (error) {
-    console.error("❌ Erreur Firebase:", error);
 }
 
+// Initialiser Firebase après le chargement de la page
+setTimeout(initializeFirebase, 1000);
 // Données des invités
 let invites = [];
 let nextId = 1;
