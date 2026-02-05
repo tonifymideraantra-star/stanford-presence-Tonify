@@ -52,7 +52,7 @@
             font-weight: 400;
         }
         
-        /* BOUTONS DU HEADER - EXACTEMENT COMME L'IMAGE */
+        /* BOUTONS DU HEADER */
         .header-actions {
             display: flex;
             gap: 15px;
@@ -85,7 +85,7 @@
         .btn-settings { color: #f39c12; }
         .btn-clear { color: #e74c3c; }
         
-        /* STATISTIQUES - EXACTEMENT COMME L'IMAGE */
+        /* STATISTIQUES */
         .stats-container {
             background: white;
             padding: 25px 40px;
@@ -129,7 +129,7 @@
             padding: 0 40px;
         }
         
-        /* LEFT PANEL - Liste des invités */
+        /* LEFT PANEL */
         .left-panel {
             flex: 3;
         }
@@ -156,7 +156,7 @@
             border-color: #3498db;
         }
         
-        /* INVITES LIST - EXACTEMENT COMME L'IMAGE */
+        /* INVITES LIST */
         .invites-container {
             background: white;
             border-radius: 12px;
@@ -259,7 +259,7 @@
             color: #3498db;
         }
         
-        /* RIGHT PANEL - Formulaire */
+        /* RIGHT PANEL */
         .right-panel {
             flex: 1;
         }
@@ -369,6 +369,37 @@
             color: white;
         }
         
+        /* FIREBASE DEBUG PANEL */
+        .debug-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: none;
+        }
+        
+        .debug-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
         /* MODAL */
         .modal {
             display: none;
@@ -427,13 +458,25 @@
     </style>
 </head>
 <body>
+    <!-- BOUTON DEBUG -->
+    <button class="debug-toggle" onclick="toggleDebug()">🔧</button>
+    
+    <!-- PANEL DEBUG -->
+    <div class="debug-panel" id="debugPanel">
+        <h4 style="margin-top:0; margin-bottom:10px;">Firebase Debug</h4>
+        <div id="debugInfo">Chargement...</div>
+        <button onclick="testFirebaseConnection()" style="margin-top:10px; padding:5px 10px; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer;">
+            Tester la connexion
+        </button>
+    </div>
+    
     <!-- INDICATEUR CONNEXION -->
     <div class="connection-status disconnected" id="connectionStatus">
         <span>🔴</span>
-        <span>Mode local uniquement</span>
+        <span id="statusText">Mode local uniquement</span>
     </div>
     
-    <!-- HEADER - EXACTEMENT COMME L'IMAGE -->
+    <!-- HEADER -->
     <header class="header">
         <div class="header-content">
             <h1 class="app-title">STANFORD SESSION 1</h1>
@@ -466,7 +509,7 @@
         </div>
     </header>
     
-    <!-- STATISTIQUES - EXACTEMENT COMME L'IMAGE -->
+    <!-- STATISTIQUES -->
     <div class="stats-container">
         <div class="stats">
             <div class="stat-item total">
@@ -488,15 +531,13 @@
     
     <!-- CONTENU PRINCIPAL -->
     <div class="main-container">
-        <!-- PANEL GAUCHE - Liste des invités -->
+        <!-- PANEL GAUCHE -->
         <div class="left-panel">
-            <!-- BARRE DE RECHERCHE -->
             <div class="search-box">
                 <input type="text" class="search-input" id="searchInput" 
                        placeholder="Rechercher un invité..." oninput="filtrerInvites()">
             </div>
             
-            <!-- LISTE DES INVITÉS -->
             <div class="invites-container" id="invitesList">
                 <div class="empty-state">
                     <div class="empty-icon">📁</div>
@@ -506,7 +547,7 @@
             </div>
         </div>
         
-        <!-- PANEL DROIT - Formulaire d'ajout -->
+        <!-- PANEL DROIT -->
         <div class="right-panel">
             <div class="add-form">
                 <h3 class="form-title">➕ AJOUT MANUEL</h3>
@@ -596,7 +637,7 @@
 
     <script>
 // ============================================
-// CONFIGURATION FIREBASE
+// CONFIGURATION FIREBASE - VÉRIFIÉE
 // ============================================
 const firebaseConfig = {
     apiKey: "AIzaSyAn21nmADgVyYWQn0WnqojVu5YRWs-FvQU",
@@ -617,38 +658,103 @@ let nextId = 1;
 let firebaseInitialized = false;
 
 // ============================================
-// INITIALISATION FIREBASE
+// FONCTIONS DE DEBUG
+// ============================================
+function updateDebugInfo(message) {
+    const debugEl = document.getElementById('debugInfo');
+    const timestamp = new Date().toLocaleTimeString();
+    debugEl.innerHTML += `<div style="margin-bottom:5px; color:#95a5a6;">[${timestamp}] ${message}</div>`;
+}
+
+function toggleDebug() {
+    const panel = document.getElementById('debugPanel');
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+async function testFirebaseConnection() {
+    if (!database) {
+        updateDebugInfo("❌ Firebase non initialisé");
+        return;
+    }
+    
+    updateDebugInfo("🔄 Test de connexion Firebase...");
+    
+    try {
+        // Tester une écriture
+        const testRef = database.ref('test_connection');
+        await testRef.set({
+            timestamp: new Date().toISOString(),
+            test: "firebase_connection_test"
+        });
+        
+        // Tester une lecture
+        const snapshot = await testRef.once('value');
+        
+        // Nettoyer
+        await testRef.remove();
+        
+        updateDebugInfo("✅ Connexion Firebase OK - Lecture/écriture fonctionnent");
+    } catch (error) {
+        updateDebugInfo(`❌ Erreur Firebase: ${error.message}`);
+    }
+}
+
+// ============================================
+// INITIALISATION FIREBASE AVEC DIAGNOSTIC
 // ============================================
 function initFirebase() {
     try {
-        console.log("🚀 Initialisation de Firebase...");
-        
-        // Mettre à jour le statut
+        updateDebugInfo("🚀 Début de l'initialisation Firebase");
         updateConnectionStatus("connecting", "🔄 Connexion à Firebase...");
         
-        // Vérifier que Firebase est chargé
+        // 1. Vérifier que Firebase SDK est chargé
         if (typeof firebase === 'undefined') {
-            throw new Error("Firebase SDK non disponible");
+            throw new Error("Firebase SDK non chargé. Vérifiez les CDN.");
         }
         
-        // Initialiser Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        database = firebase.database(app);
+        updateDebugInfo("✅ Firebase SDK détecté");
         
-        console.log("✅ Firebase initialisé avec succès!");
+        // 2. Vérifier la configuration
+        if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
+            throw new Error("Configuration Firebase incomplète");
+        }
+        
+        updateDebugInfo("✅ Configuration Firebase valide");
+        
+        // 3. Initialiser Firebase
+        let app;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            updateDebugInfo("✅ Firebase App initialisé");
+        } catch (initError) {
+            // Si déjà initialisé, récupérer l'app existante
+            if (initError.code === 'app/duplicate-app') {
+                app = firebase.app();
+                updateDebugInfo("ℹ️ Firebase App déjà initialisée");
+            } else {
+                throw initError;
+            }
+        }
+        
+        // 4. Initialiser Database
+        database = firebase.database(app);
         firebaseInitialized = true;
         
-        // Configurer le monitoring de connexion
+        updateDebugInfo(`✅ Base de données initialisée: ${firebaseConfig.databaseURL}`);
+        
+        // 5. Tester la connexion
+        testFirebaseConnection();
+        
+        // 6. Configurer le monitoring de connexion
         setupConnectionMonitor();
         
-        // Charger les données depuis Firebase
+        // 7. Charger les données
         loadFromFirebase();
         
     } catch (error) {
         console.error("❌ Erreur d'initialisation Firebase:", error);
+        updateDebugInfo(`❌ Erreur: ${error.message}`);
         updateConnectionStatus("disconnected", "🔴 Mode local uniquement");
-        
-        // Charger depuis le stockage local
         loadFromLocalStorage();
     }
 }
@@ -663,11 +769,11 @@ function setupConnectionMonitor() {
     
     connectedRef.on("value", (snap) => {
         if (snap.val() === true) {
+            updateDebugInfo("🔥 Connexion Firebase active");
             updateConnectionStatus("connected", "✅ Connecté à Firebase");
-            console.log("🔥 Connexion Firebase active - Mode temps réel");
         } else {
+            updateDebugInfo("⚠️ Connexion Firebase perdue");
             updateConnectionStatus("disconnected", "🔴 Déconnecté - Mode local");
-            console.log("⚠️ Connexion Firebase perdue");
         }
     });
 }
@@ -677,6 +783,7 @@ function setupConnectionMonitor() {
 // ============================================
 function updateConnectionStatus(status, message) {
     const statusEl = document.getElementById('connectionStatus');
+    const statusText = document.getElementById('statusText');
     
     // Supprimer toutes les classes
     statusEl.classList.remove("connected", "disconnected", "connecting");
@@ -688,7 +795,7 @@ function updateConnectionStatus(status, message) {
     const icon = status === "connected" ? "✅" : 
                  status === "connecting" ? "🔄" : "🔴";
     
-    statusEl.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+    statusEl.innerHTML = `<span>${icon}</span><span id="statusText">${message}</span>`;
 }
 
 // ============================================
@@ -696,12 +803,12 @@ function updateConnectionStatus(status, message) {
 // ============================================
 function loadFromFirebase() {
     if (!database) {
-        console.log("⚠️ Firebase non disponible, chargement local");
+        updateDebugInfo("⚠️ Firebase non disponible, chargement local");
         loadFromLocalStorage();
         return;
     }
     
-    console.log("🔄 Chargement des données depuis Firebase...");
+    updateDebugInfo("🔄 Tentative de chargement depuis Firebase...");
     
     // Écouter les changements en temps réel
     database.ref('invites').on('value', (snapshot) => {
@@ -728,19 +835,20 @@ function loadFromFirebase() {
                 nextId = 1;
             }
             
-            console.log(`✅ ${invites.length} invités chargés depuis Firebase`);
+            updateDebugInfo(`✅ ${invites.length} invités chargés depuis Firebase`);
             displayInvites();
             saveToLocalStorage();
             
         } else {
             invites = [];
             nextId = 1;
-            console.log("ℹ️ Base de données Firebase vide");
+            updateDebugInfo("ℹ️ Base de données Firebase vide");
             displayInvites();
         }
         
     }, (error) => {
         console.error("❌ Erreur Firebase:", error);
+        updateDebugInfo(`❌ Erreur Firebase: ${error.message}`);
         loadFromLocalStorage();
     });
 }
@@ -750,16 +858,20 @@ function loadFromFirebase() {
 // ============================================
 function saveToFirebase() {
     if (database && firebaseInitialized) {
+        updateDebugInfo("💾 Sauvegarde sur Firebase...");
+        
         database.ref('invites').set(invites)
             .then(() => {
-                console.log("✅ Données sauvegardées sur Firebase");
+                updateDebugInfo("✅ Données sauvegardées sur Firebase");
                 saveToLocalStorage();
             })
             .catch(err => {
                 console.error("❌ Erreur Firebase, sauvegarde locale:", err);
+                updateDebugInfo(`❌ Erreur Firebase: ${err.message}`);
                 saveToLocalStorage();
             });
     } else {
+        updateDebugInfo("💾 Sauvegarde locale uniquement (Firebase non disponible)");
         saveToLocalStorage();
     }
 }
@@ -770,7 +882,6 @@ function saveToFirebase() {
 function saveToLocalStorage() {
     localStorage.setItem('stanford_invites', JSON.stringify(invites));
     localStorage.setItem('stanford_nextId', nextId.toString());
-    console.log("📁 Données sauvegardées localement");
 }
 
 function loadFromLocalStorage() {
@@ -779,7 +890,7 @@ function loadFromLocalStorage() {
         try {
             invites = JSON.parse(saved);
             nextId = parseInt(localStorage.getItem('stanford_nextId')) || invites.length + 1;
-            console.log(`📂 ${invites.length} invités chargés localement`);
+            updateDebugInfo(`📂 ${invites.length} invités chargés localement`);
             displayInvites();
         } catch (error) {
             console.error("❌ Erreur chargement local:", error);
@@ -791,13 +902,12 @@ function loadFromLocalStorage() {
 }
 
 // ============================================
-// AFFICHAGE DES INVITÉS - EXACTEMENT COMME L'IMAGE
+// AFFICHAGE DES INVITÉS
 // ============================================
 function displayInvites() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const listEl = document.getElementById('invitesList');
     
-    // Si pas d'invités
     if (invites.length === 0) {
         listEl.innerHTML = `
             <div class="empty-state">
@@ -810,7 +920,6 @@ function displayInvites() {
         return;
     }
     
-    // Filtrer selon la recherche
     const filteredInvites = invites.filter(invite => {
         return (
             (invite.nom && invite.nom.toLowerCase().includes(searchTerm)) ||
@@ -820,7 +929,6 @@ function displayInvites() {
         );
     });
     
-    // Si aucun résultat
     if (filteredInvites.length === 0) {
         listEl.innerHTML = `
             <div class="empty-state">
@@ -833,7 +941,6 @@ function displayInvites() {
         return;
     }
     
-    // Générer le HTML - EXACTEMENT COMME L'IMAGE
     let html = '';
     filteredInvites.forEach(invite => {
         const civiliteDisplay = invite.civilite === "M." ? "Monsieur" : 
@@ -869,15 +976,12 @@ function displayInvites() {
 }
 
 // ============================================
-// FONCTION DE FILTRAGE
+// FONCTIONS PRINCIPALES
 // ============================================
 function filtrerInvites() {
     displayInvites();
 }
 
-// ============================================
-// MISE À JOUR DES STATISTIQUES
-// ============================================
 function updateStats() {
     const total = invites.length;
     const present = invites.filter(i => i.present).length;
@@ -888,9 +992,6 @@ function updateStats() {
     document.getElementById('absentCount').textContent = absent;
 }
 
-// ============================================
-// TOGGLE PRÉSENCE
-// ============================================
 function togglePresence(id) {
     const invite = invites.find(i => i.id === id);
     if (invite) {
@@ -906,15 +1007,9 @@ function togglePresence(id) {
         
         saveToFirebase();
         displayInvites();
-        
-        // Notification
-        showNotification(`${invite.civilite} ${invite.nom} ${invite.present ? 'marqué(e) présent(e)' : 'marqué(e) absent(e)'}`);
     }
 }
 
-// ============================================
-// AJOUTER UN NOUVEL INVITÉ
-// ============================================
 function ajouterNouvelInvite() {
     const civilite = document.getElementById('civilite').value;
     const nom = document.getElementById('nomComplet').value.trim();
@@ -922,7 +1017,6 @@ function ajouterNouvelInvite() {
     const entreprise = document.getElementById('entreprise').value.trim();
     const email = document.getElementById('email').value.trim();
     
-    // Validation
     if (!nom) {
         alert("❌ Veuillez saisir le nom et prénom");
         document.getElementById('nomComplet').focus();
@@ -950,7 +1044,6 @@ function ajouterNouvelInvite() {
     
     invites.push(nouvelInvite);
     
-    // Réinitialiser le formulaire
     document.getElementById('nomComplet').value = '';
     document.getElementById('fonction').value = '';
     document.getElementById('entreprise').value = '';
@@ -958,13 +1051,8 @@ function ajouterNouvelInvite() {
     
     saveToFirebase();
     displayInvites();
-    
-    alert(`✅ ${civilite} ${nom} ajouté(e) avec succès !`);
 }
 
-// ============================================
-// OUVIR MODAL DE MODIFICATION
-// ============================================
 function openEditModal(id) {
     const invite = invites.find(i => i.id === id);
     if (invite) {
@@ -978,9 +1066,6 @@ function openEditModal(id) {
     }
 }
 
-// ============================================
-// SAUVEGARDER MODIFICATION
-// ============================================
 function sauvegarderModification() {
     const id = parseInt(document.getElementById('editId').value);
     const invite = invites.find(i => i.id === id);
@@ -995,32 +1080,21 @@ function sauvegarderModification() {
         saveToFirebase();
         displayInvites();
         fermerModal();
-        alert('✅ Invité modifié avec succès !');
     }
 }
 
-// ============================================
-// SUPPRIMER INVITÉ
-// ============================================
 function deleteInvite(id) {
     if (confirm('⚠️ Voulez-vous vraiment supprimer cet invité ?')) {
         invites = invites.filter(i => i.id !== id);
         saveToFirebase();
         displayInvites();
-        alert('✅ Invité supprimé avec succès !');
     }
 }
 
-// ============================================
-// FERMER MODAL
-// ============================================
 function fermerModal() {
     document.getElementById('editModal').style.display = 'none';
 }
 
-// ============================================
-// IMPORTER CSV
-// ============================================
 function importerFichier(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1039,9 +1113,6 @@ function importerFichier(event) {
     reader.readAsText(file, 'UTF-8');
 }
 
-// ============================================
-// TRAITER CSV
-// ============================================
 function processCSV(csvText) {
     const lignes = csvText.split('\n');
     const nouveauxInvites = [];
@@ -1079,13 +1150,9 @@ function processCSV(csvText) {
         alert("❌ Aucune donnée valide trouvée dans le fichier CSV");
     }
     
-    // Réinitialiser le input file
     document.getElementById('fileInput').value = '';
 }
 
-// ============================================
-// EXPORTER DONNÉES
-// ============================================
 function exporterDonnees() {
     if (invites.length === 0) {
         alert("❌ Aucun invité à exporter");
@@ -1103,13 +1170,8 @@ function exporterDonnees() {
     link.href = URL.createObjectURL(blob);
     link.download = `presences_stanford_${new Date().toISOString().slice(0,10)}.csv`;
     link.click();
-    
-    alert(`✅ ${invites.length} invité(s) exporté(s) !`);
 }
 
-// ============================================
-// RÉINITIALISER LISTE
-// ============================================
 function reinitialiserListe() {
     if (!confirm("⚠️ Voulez-vous vraiment effacer TOUTES les données ?\nCette action est irréversible.")) {
         return;
@@ -1123,7 +1185,6 @@ function reinitialiserListe() {
                 localStorage.removeItem('stanford_invites');
                 localStorage.removeItem('stanford_nextId');
                 displayInvites();
-                alert("✅ Toutes les données ont été réinitialisées !");
             })
             .catch(error => {
                 console.error("❌ Erreur réinitialisation Firebase:", error);
@@ -1132,7 +1193,6 @@ function reinitialiserListe() {
                 localStorage.removeItem('stanford_invites');
                 localStorage.removeItem('stanford_nextId');
                 displayInvites();
-                alert("✅ Données réinitialisées localement !");
             });
     } else {
         invites = [];
@@ -1140,56 +1200,23 @@ function reinitialiserListe() {
         localStorage.removeItem('stanford_invites');
         localStorage.removeItem('stanford_nextId');
         displayInvites();
-        alert("✅ Données réinitialisées !");
     }
 }
 
-// ============================================
-// OUVIR PARAMÈTRES
-// ============================================
 function ouvrirSettings() {
     alert("⚙️ Paramètres\n\nPour changer le nom de l'événement ou d'autres paramètres, cette fonctionnalité sera disponible dans la prochaine version.");
 }
 
 // ============================================
-// NOTIFICATION
-// ============================================
-function showNotification(message, type = 'success') {
-    // Créer une notification temporaire
-    const notification = document.createElement('div');
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 12px 24px;
-        background: ${type === 'error' ? '#e74c3c' : '#27ae60'};
-        color: white;
-        border-radius: 8px;
-        font-weight: 600;
-        z-index: 3000;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Supprimer après 3 secondes
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
-
-// ============================================
-// INITIALISATION DE L'APPLICATION
+// INITIALISATION
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log("🚀 Application STANFORD initialisée");
     
-    // Démarrer Firebase après un délai
+    // Démarrer Firebase
     setTimeout(initFirebase, 1000);
     
-    // Sauvegarde automatique toutes les 30 secondes
+    // Sauvegarde automatique
     setInterval(() => {
         if (invites.length > 0) {
             saveToFirebase();
