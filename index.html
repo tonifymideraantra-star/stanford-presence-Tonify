@@ -5,40 +5,402 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STANFORD SESSION 1 - Gestion des Présences</title>
     
-    <!-- SUPABASE SDK -->
+    <!-- SUPPRIMER FIREBASE - AJOUTER SUPABASE -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
-        /* VOTRE CSS EXISTANT */
-        :root { --primary-color: #2c3e50; --secondary-color: #3498db; --success-color: #28a745; --danger-color: #dc3545; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
-        header { background: var(--primary-color); color: white; padding: 20px 30px; }
-        .stats { background: #f8f9fa; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 2px solid #dee2e6; font-size: 16px; font-weight: 600; }
-        .main { display: flex; gap: 20px; margin-top: 0; padding: 20px; }
-        .left { flex: 3; background: white; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef; }
-        .right { flex: 1; background: white; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef; }
-        .search-container { position: relative; margin-bottom: 20px; }
-        .search { width: 100%; padding: 12px 20px 12px 45px; border: 2px solid #dee2e6; border-radius: 25px; font-size: 16px; }
-        .invite-list { max-height: 600px; overflow-y: auto; border-radius: 8px; }
-        .invite { padding: 15px; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
-        .invite.present { background: #d4edda; border-left: 4px solid var(--success-color); }
-        button { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        /* VOTRE CSS EXISTANT RESTE LE MÊME */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header { 
+            background: var(--primary-color);
+            color: white; 
+            padding: 20px 30px; 
+            position: relative;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/Stanford_University_seal_2003.svg/200px-Stanford_University_seal_2003.svg.png');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .app-title {
+            font-size: 28px;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .app-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 5px 0 0 0;
+        }
+        
+        .header-buttons { 
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .header-buttons button { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-import { background: var(--info-color); color: white; }
+        .btn-export { background: var(--success-color); color: white; }
+        .btn-clear { background: var(--danger-color); color: white; }
+        .btn-settings { background: var(--warning-color); color: black; }
+        
+        .header-buttons button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        .stats { 
+            background: var(--light-color); 
+            padding: 15px 30px; 
+            display: flex; 
+            justify-content: space-between;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .main { 
+            display: flex; 
+            gap: 20px; 
+            margin-top: 0;
+            padding: 20px;
+        }
+        
+        .left { 
+            flex: 3; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .right { 
+            flex: 1; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search { 
+            width: 100%; 
+            padding: 12px 20px 12px 45px; 
+            border: 2px solid #dee2e6; 
+            border-radius: 25px; 
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .invite-list { 
+            max-height: 600px; 
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+        
+        .invite { 
+            padding: 15px; 
+            border-bottom: 1px solid #e9ecef; 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        
+        .invite:hover { background: #f8f9fa; }
+        .invite.present { 
+            background: #d4edda; 
+            border-left-color: var(--success-color);
+        }
+        
+        .invite-info { flex: 1; }
+        
+        .invite-name { 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+        
+        .invite-details { 
+            font-size: 14px; 
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+        
+        .invite-table {
+            font-size: 12px;
+            color: #6c757d;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 5px;
+            margin-right: 5px;
+        }
+        
+        .invite-email { 
+            font-size: 12px; 
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .invite-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        button { 
+            padding: 8px 15px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
         .btn-present { background: var(--success-color); color: white; }
+        .btn-present.checked { background: #6c757d; }
+        .btn-edit { background: var(--warning-color); color: black; }
+        .btn-delete { background: var(--danger-color); color: white; }
         .btn-add { background: var(--secondary-color); color: white; width: 100%; padding: 12px; margin-top: 10px; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ced4da; border-radius: 5px; font-size: 14px; }
-        .empty-state { text-align: center; padding: 60px 20px; color: #6c757d; }
+        
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 5px 0 15px 0; 
+            border: 1px solid #ced4da; 
+            border-radius: 5px; 
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+        
+        .file-input { display: none; }
+        
+        .file-label { 
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px; 
+            background: var(--info-color); 
+            color: white; 
+            border-radius: 25px; 
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .file-label:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        .settings-panel {
+            background: var(--light-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .settings-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .color-option.selected {
+            border-color: var(--dark-color);
+            transform: scale(1.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 992px) {
+            .main { flex-direction: column; }
+            .left, .right { width: 100%; }
+        }
+        
+        /* Indicateur de connexion */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1001;
+        }
+        .connected { background: #28a745; color: white; }
+        .disconnected { background: #dc3545; color: white; }
     </style>
 </head>
 <body>
+    <div class="connection-status disconnected" id="connectionStatus">🔴 Déconnecté</div>
+    
     <div class="container">
         <header>
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <div style="width: 60px; height: 60px; background: var(--secondary-color); border-radius: 50%; margin-right: 15px; background-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/Stanford_University_seal_2003.svg/200px-Stanford_University_seal_2003.svg.png'); background-size: cover;"></div>
+            <div class="logo-container">
+                <div class="logo" id="appLogo">S1</div>
                 <div>
-                    <h1 style="font-size: 28px; margin: 0; font-weight: 600;" id="appTitle">STANFORD SESSION 1</h1>
-                    <p style="font-size: 14px; opacity: 0.9; margin: 5px 0 0 0;">Gestion des présences professionnelles</p>
+                    <h1 class="app-title" id="appTitle">STANFORD SESSION 1</h1>
+                    <p class="app-subtitle">Gestion des présences en temps réel</p>
                 </div>
+            </div>
+            
+            <div class="header-buttons">
+                <label class="file-label">
+                    📁 <span>IMPORTER LISTE CSV</span>
+                    <input type="file" id="fileInput" class="file-input" accept=".csv" onchange="importerFichier(event)">
+                </label>
+                <button class="btn-export" onclick="exporterDonnees()">
+                    📥 EXPORTER PRÉSENCES
+                </button>
+                <button class="btn-settings" onclick="ouvrirSettings()">
+                    ⚙️ PARAMÈTRES
+                </button>
+                <button class="btn-clear" onclick="reinitialiserListe()">
+                    🗑️ RÉINITIALISER
+                </button>
             </div>
         </header>
         
@@ -51,14 +413,15 @@
         <div class="main">
             <div class="left">
                 <div class="search-container">
-                    <span>🔍</span>
+                    <span class="search-icon">🔍</span>
                     <input type="text" class="search" id="searchInput" placeholder="Rechercher un invité...">
                 </div>
                 
                 <div class="invite-list" id="invitesList">
                     <div class="empty-state">
-                        <div>⏳</div>
+                        <div class="empty-state-icon">⏳</div>
                         <h3>Connexion en cours...</h3>
+                        <p>Chargement des données</p>
                     </div>
                 </div>
             </div>
@@ -66,125 +429,295 @@
             <div class="right">
                 <h3 style="color:var(--primary-color); margin-top:0;">➕ AJOUT MANUEL</h3>
                 
-                <input type="text" id="nomComplet" placeholder="Nom et Prénom *" required>
-                <input type="text" id="entreprise" placeholder="Entreprise *" required>
-                <input type="text" id="fonction" placeholder="Fonction">
-                <input type="text" id="table" placeholder="Numéro de table">
+                <label>Civilité</label>
+                <select id="civilite">
+                    <option value="M.">Monsieur</option>
+                    <option value="Mme">Madame</option>
+                </select>
                 
-                <button class="btn-add" onclick="ajouterNouvelInvite()">✅ Enregistrer la présence</button>
+                <label>Nom et Prénom *</label>
+                <input type="text" id="nomComplet" placeholder="Ex: Dupont Jean" required>
+                
+                <label>Fonction</label>
+                <input type="text" id="fonction" placeholder="Ex: Directeur">
+                
+                <label>Entreprise *</label>
+                <input type="text" id="entreprise" placeholder="Ex: Société ABC" required>
+                
+                <label>Email</label>
+                <input type="email" id="email" placeholder="exemple@entreprise.com">
+                
+                <label>Numéro de table</label>
+                <input type="text" id="table" placeholder="Ex: Table 1, A3, VIP">
+                
+                <button class="btn-add" onclick="ajouterNouvelInvite()">
+                    ✅ Enregistrer la présence
+                </button>
+                
+                <div class="settings-panel">
+                    <div class="settings-title">
+                        <span>⚙️</span> Paramètres rapides
+                    </div>
+                    <label>Nom de l'événement</label>
+                    <input type="text" id="eventName" value="STANFORD SESSION 1" onchange="changerNomEvenement()">
+                    
+                    <div style="margin-top:15px;">
+                        <label>Couleur du thème</label>
+                        <div class="color-picker">
+                            <div class="color-option selected" style="background:#2c3e50;" onclick="changerCouleur('#2c3e50')"></div>
+                            <div class="color-option" style="background:#3498db;" onclick="changerCouleur('#3498db')"></div>
+                            <div class="color-option" style="background:#e74c3c;" onclick="changerCouleur('#e74c3c')"></div>
+                            <div class="color-option" style="background:#2ecc71;" onclick="changerCouleur('#2ecc71')"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal modification -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h3 class="modal-title">✏️ MODIFIER L'INVITÉ</h3>
+            <input type="hidden" id="editId">
+            
+            <label>Civilité</label>
+            <select id="editCivilite">
+                <option value="M.">Monsieur</option>
+                <option value="Mme">Madame</option>
+            </select>
+            
+            <label>Nom et Prénom *</label>
+            <input type="text" id="editNom" required>
+            
+            <label>Fonction</label>
+            <input type="text" id="editFonction">
+            
+            <label>Entreprise *</label>
+            <input type="text" id="editEntreprise" required>
+            
+            <label>Email</label>
+            <input type="email" id="editEmail">
+            
+            <label>Numéro de table</label>
+            <input type="text" id="editTable">
+            
+            <div class="form-actions">
+                <button class="btn-present" onclick="sauvegarderModification()">
+                    💾 Enregistrer
+                </button>
+                <button class="btn-delete" onclick="fermerModal()">
+                    ❌ Annuler
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-// === CONFIGURATION SUPABASE SIMPLIFIÉE ===
-const SUPABASE_URL = 'https://kltltapwnhrfapjglfjt.supabase.co';
+// === CONFIGURATION SUPABASE (AVEC VOS CLÉS) ===
+const SUPABASE_URL = 'https://tonifymideraantra-star.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_B5WWj88YTnN9_bXheQBhSw_gltzjIlh';
 
 // Initialiser Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Variables
+// Variables globales
 let invites = [];
 
-// Charger les données au démarrage
+// === INITIALISATION ===
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 Démarrage application Stanford...');
+    console.log('🚀 Initialisation application Stanford');
+    
+    // Mettre à jour le statut
+    document.getElementById('connectionStatus').textContent = "🔄 Connexion...";
+    document.getElementById('connectionStatus').className = "connection-status disconnected";
+    
+    // Charger les données
     await chargerDonnees();
+    
+    // Activer le temps réel
     activerTempsReel();
+    
+    // Écouteur de recherche
     document.getElementById('searchInput').addEventListener('input', chargerInvites);
+    
+    // Charger les paramètres
+    chargerParametres();
 });
 
-// CHARGER LES DONNÉES
+// === CHARGER LES DONNÉES ===
 async function chargerDonnees() {
+    const liste = document.getElementById('invitesList');
+    
     try {
-        console.log('📥 Chargement des données...');
+        // Test de connexion
         const { data, error } = await supabase
             .from('invites')
             .select('*')
-            .order('id', { ascending: false });
+            .order('created_at', { ascending: false });
         
         if (error) {
-            console.error('❌ Erreur Supabase:', error);
-            document.getElementById('invitesList').innerHTML = `
-                <div class="empty-state">
-                    <div>❌</div>
-                    <h3>Erreur: ${error.message}</h3>
-                    <p>Vérifiez votre connexion</p>
-                </div>
-            `;
-            return;
+            if (error.message.includes('relation "invites" does not exist')) {
+                liste.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>Table non trouvée</h3>
+                        <p>La table "invites" n'existe pas encore</p>
+                        <button onclick="creerTable()" style="margin-top: 15px; padding: 10px 20px; background: var(--secondary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Créer la table maintenant
+                        </button>
+                    </div>
+                `;
+                document.getElementById('connectionStatus').textContent = "❌ Table manquante";
+                return;
+            }
+            throw error;
         }
         
-        invites = data || [];
+        // Convertir le format
+        invites = data.map(item => ({
+            id: item.id,
+            civilite: item.civilite || 'M.',
+            nom: item.nom || '',
+            fonction: item.fonction || '',
+            entreprise: item.entreprise || '',
+            email: item.email || '',
+            table: item.table_number || '',
+            present: item.present || false,
+            preinscrit: item.preinscrit || false,
+            heureArrivee: item.heure_arrivee || '',
+            dateArrivee: item.date_arrivee || ''
+        }));
+        
         console.log(`✅ ${invites.length} invités chargés`);
         
-        if (invites.length === 0) {
-            document.getElementById('invitesList').innerHTML = `
-                <div class="empty-state">
-                    <div>📁</div>
-                    <h3>Aucun invité</h3>
-                    <p>Ajoutez votre premier invité</p>
-                </div>
-            `;
-        } else {
-            chargerInvites();
-        }
+        // Mettre à jour le statut
+        document.getElementById('connectionStatus').textContent = "✅ Connecté";
+        document.getElementById('connectionStatus').className = "connection-status connected";
         
+        // Afficher les données
+        chargerInvites();
         mettreAJourStats();
         
     } catch (error) {
-        console.error('💥 Erreur fatale:', error);
-        document.getElementById('invitesList').innerHTML = `
+        console.error('❌ Erreur chargement:', error);
+        liste.innerHTML = `
             <div class="empty-state">
-                <div>💥</div>
-                <h3>Erreur critique</h3>
+                <div class="empty-state-icon">❌</div>
+                <h3>Erreur de connexion</h3>
                 <p>${error.message}</p>
             </div>
         `;
+        document.getElementById('connectionStatus').textContent = "❌ Erreur";
     }
 }
 
-// ACTIVER TEMPS RÉEL
+// === CRÉER LA TABLE (fonction d'aide) ===
+function creerTable() {
+    const projectId = SUPABASE_URL.split('//')[1].split('.')[0];
+    const sqlUrl = `https://app.supabase.com/project/${projectId}/sql`;
+    
+    const sqlCode = `CREATE TABLE invites (
+  id BIGSERIAL PRIMARY KEY,
+  civilite VARCHAR(10) DEFAULT 'M.',
+  nom VARCHAR(255) NOT NULL,
+  fonction VARCHAR(255),
+  entreprise VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
+  table_number VARCHAR(50),
+  present BOOLEAN DEFAULT false,
+  preinscrit BOOLEAN DEFAULT false,
+  heure_arrivee VARCHAR(20),
+  date_arrivee VARCHAR(20),
+  created_at TIMESTAMP DEFAULT NOW()
+);`;
+    
+    alert(`Ouvrez ce lien et copiez ce code SQL:\n\n${sqlUrl}\n\nCode SQL:\n${sqlCode}`);
+    window.open(sqlUrl, '_blank');
+}
+
+// === ACTIVER LE TEMPS RÉEL ===
 function activerTempsReel() {
-    supabase
-        .channel('invites')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'invites' }, 
-            () => {
-                console.log('🔄 Mise à jour temps réel');
-                chargerDonnees();
+    console.log('🔔 Activation temps réel...');
+    
+    const subscription = supabase
+        .channel('invites-changes')
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'invites' },
+            async (payload) => {
+                console.log('🔄 Changement temps réel:', payload);
+                
+                // Recharger les données
+                await chargerDonnees();
+                
+                // Animation de notification
+                const status = document.getElementById('connectionStatus');
+                const originalText = status.textContent;
+                status.textContent = "🔄 Mise à jour...";
+                
+                setTimeout(() => {
+                    status.textContent = originalText;
+                }, 1000);
             }
         )
         .subscribe();
+    
+    console.log('✅ Temps réel activé');
+    return subscription;
 }
 
-// AFFICHER LES INVITÉS
+// === AFFICHER LA LISTE DES INVITÉS ===
 function chargerInvites() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const liste = document.getElementById('invitesList');
     
+    if (invites.length === 0) {
+        liste.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <h3>Aucun invité</h3>
+                <p>Commencez par ajouter des invités</p>
+            </div>
+        `;
+        return;
+    }
+    
     const filtres = invites.filter(i => 
-        i.nom?.toLowerCase().includes(search) || 
-        i.entreprise?.toLowerCase().includes(search)
+        i.nom.toLowerCase().includes(search) || 
+        i.entreprise.toLowerCase().includes(search) ||
+        (i.fonction && i.fonction.toLowerCase().includes(search))
     );
     
     if (filtres.length === 0) {
-        liste.innerHTML = '<div class="empty-state"><div>🔍</div><h3>Aucun résultat</h3></div>';
+        liste.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                <h3>Aucun résultat</h3>
+                <p>Aucun invité ne correspond à votre recherche</p>
+            </div>
+        `;
         return;
     }
     
     let html = '';
     filtres.forEach(invite => {
         html += `
-            <div class="invite ${invite.present ? 'present' : ''}">
-                <div style="flex: 1;">
-                    <div style="font-size: 16px; font-weight: 600;">${invite.civilite || 'M.'} ${invite.nom || ''}</div>
-                    <div style="font-size: 14px; color: #6c757d;">${invite.fonction || ''} - ${invite.entreprise || ''}</div>
-                    ${invite.table_number ? `<div style="font-size: 12px; background: #e9ecef; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 5px;">🏷️ ${invite.table_number}</div>` : ''}
+            <div class="invite ${invite.present ? 'present' : ''}" data-id="${invite.id}">
+                <div class="invite-info">
+                    <div class="invite-name">${invite.civilite} ${invite.nom}</div>
+                    <div class="invite-details">${invite.fonction} - ${invite.entreprise}</div>
+                    ${invite.table ? `<div class="invite-table">🏷️ Table: ${invite.table}</div>` : ''}
+                    ${invite.email ? `<div class="invite-email">📧 ${invite.email}</div>` : ''}
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn-present" onclick="togglePresence(${invite.id})" style="background: ${invite.present ? '#6c757d' : '#28a745'}">
-                        ${invite.present ? '✓ PRÉSENT' : '👤 PRÉSENT'}
+                <div class="invite-actions">
+                    <button class="btn-present ${invite.present ? 'checked' : ''}" onclick="togglePresence(${invite.id})">
+                        ${invite.present ? '✓' : '👤'} ${invite.present ? 'PRÉSENT' : 'PRÉSENT'}
+                    </button>
+                    <button class="btn-edit" onclick="ouvrirModalModification(${invite.id})">
+                        ✏️
+                    </button>
+                    <button class="btn-delete" onclick="supprimerInvite(${invite.id})">
+                        🗑️
                     </button>
                 </div>
             </div>
@@ -192,10 +725,9 @@ function chargerInvites() {
     });
     
     liste.innerHTML = html;
-    mettreAJourStats();
 }
 
-// METTRE À JOUR STATS
+// === METTRE À JOUR LES STATISTIQUES ===
 function mettreAJourStats() {
     const total = invites.length;
     const presents = invites.filter(i => i.present).length;
@@ -204,40 +736,50 @@ function mettreAJourStats() {
     document.getElementById('absentCount').textContent = total - presents;
 }
 
-// AJOUTER UN INVITÉ
+// === AJOUTER UN INVITÉ ===
 async function ajouterNouvelInvite() {
+    const civilite = document.getElementById('civilite').value;
     const nom = document.getElementById('nomComplet').value.trim();
+    const fonction = document.getElementById('fonction').value.trim();
     const entreprise = document.getElementById('entreprise').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const table = document.getElementById('table').value.trim();
     
     if (!nom || !entreprise) {
-        alert("❌ Nom et entreprise requis");
+        alert("❌ Veuillez remplir au moins le nom et l'entreprise");
         return;
     }
     
     try {
-        console.log('➕ Ajout invité...');
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('invites')
-            .insert([{
-                nom: nom.toUpperCase(),
-                entreprise: entreprise,
-                fonction: document.getElementById('fonction').value.trim() || '',
-                table_number: document.getElementById('table').value.trim() || '',
-                present: true,
-                preinscrit: false,
-                heure_arrivee: new Date().toLocaleTimeString('fr-FR'),
-                date_arrivee: new Date().toLocaleDateString('fr-FR')
-            }]);
+            .insert([
+                {
+                    civilite: civilite,
+                    nom: nom.toUpperCase(),
+                    fonction: fonction || "Non spécifié",
+                    entreprise: entreprise,
+                    email: email || null,
+                    table_number: table || null,
+                    present: true,
+                    preinscrit: false,
+                    heure_arrivee: new Date().toLocaleTimeString('fr-FR'),
+                    date_arrivee: new Date().toLocaleDateString('fr-FR')
+                }
+            ]);
         
         if (error) throw error;
         
-        // Réinitialiser
+        // Réinitialiser le formulaire
         document.getElementById('nomComplet').value = '';
-        document.getElementById('entreprise').value = '';
         document.getElementById('fonction').value = '';
+        document.getElementById('entreprise').value = '';
+        document.getElementById('email').value = '';
         document.getElementById('table').value = '';
         
-        alert(`✅ ${nom} ajouté !`);
+        alert(`✅ ${civilite} ${nom} ajouté(e) avec succès !`);
+        
+        // Le temps réel va automatiquement recharger les données
         
     } catch (error) {
         console.error('❌ Erreur ajout:', error);
@@ -245,7 +787,7 @@ async function ajouterNouvelInvite() {
     }
 }
 
-// MODIFIER PRÉSENCE
+// === MODIFIER PRÉSENCE ===
 async function togglePresence(id) {
     try {
         const invite = invites.find(i => i.id === id);
@@ -262,11 +804,110 @@ async function togglePresence(id) {
         
         if (error) throw error;
         
+        // Le temps réel va mettre à jour automatiquement
+        
     } catch (error) {
         console.error('❌ Erreur présence:', error);
         alert('❌ Erreur: ' + error.message);
     }
 }
-    </script>
-</body>
-</html>
+
+// === OUVRIR MODAL MODIFICATION ===
+function ouvrirModalModification(id) {
+    const invite = invites.find(i => i.id === id);
+    if (invite) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editCivilite').value = invite.civilite;
+        document.getElementById('editNom').value = invite.nom;
+        document.getElementById('editFonction').value = invite.fonction;
+        document.getElementById('editEntreprise').value = invite.entreprise;
+        document.getElementById('editEmail').value = invite.email || '';
+        document.getElementById('editTable').value = invite.table || '';
+        document.getElementById('editModal').style.display = 'flex';
+    }
+}
+
+// === SAUVEGARDER MODIFICATION ===
+async function sauvegarderModification() {
+    const id = document.getElementById('editId').value;
+    
+    try {
+        const { error } = await supabase
+            .from('invites')
+            .update({
+                civilite: document.getElementById('editCivilite').value,
+                nom: document.getElementById('editNom').value.toUpperCase(),
+                fonction: document.getElementById('editFonction').value,
+                entreprise: document.getElementById('editEntreprise').value,
+                email: document.getElementById('editEmail').value || null,
+                table_number: document.getElementById('editTable').value || null
+            })
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        fermerModal();
+        alert('✅ Invité modifié !');
+        
+    } catch (error) {
+        console.error('❌ Erreur modification:', error);
+        alert('❌ Erreur: ' + error.message);
+    }
+}
+
+// === SUPPRIMER INVITÉ ===
+async function supprimerInvite(id) {
+    if (!confirm('⚠️ Supprimer cet invité ?')) return;
+    
+    try {
+        const { error } = await supabase
+            .from('invites')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        alert('✅ Invité supprimé !');
+        
+    } catch (error) {
+        console.error('❌ Erreur suppression:', error);
+        alert('❌ Erreur: ' + error.message);
+    }
+}
+
+// === FERMER MODAL ===
+function fermerModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// === EXPORTER DONNÉES ===
+async function exporterDonnees() {
+    try {
+        const { data, error } = await supabase
+            .from('invites')
+            .select('*');
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            alert("❌ Aucune donnée à exporter");
+            return;
+        }
+        
+        let csv = "Civilité;Nom;Fonction;Entreprise;Email;Table;Présent;Pré-inscrit;Heure arrivée;Date arrivée\n";
+        
+        data.forEach(invite => {
+            csv += `"${invite.civilite || ''}";"${invite.nom || ''}";"${invite.fonction || ''}";"${invite.entreprise || ''}";"${invite.email || ''}";"${invite.table_number || ''}";"${invite.present ? 'Oui' : 'Non'}";"${invite.preinscrit ? 'Oui' : 'Non'}";"${invite.heure_arrivee || ''}";"${invite.date_arrivee || ''}"\n`;
+        });
+        
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `presences_stanford_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        
+        alert(`✅ ${data.length} invités exportés !`);
+        
+    } catch (error) {
+        console.error('❌ Erreur export:', error);
+        alert('
