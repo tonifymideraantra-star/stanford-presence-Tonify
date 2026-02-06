@@ -9,194 +9,77 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #28a745;
-        }
-        
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: #f5f5f5;
-        }
-        
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            background: white; 
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        header { 
-            background: var(--primary-color);
-            color: white; 
-            padding: 20px; 
-            border-radius: 10px 10px 0 0;
-        }
-        
-        .stats { 
-            background: #f8f9fa; 
-            padding: 15px 20px; 
-            display: flex; 
-            justify-content: space-between;
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .main { 
-            display: flex; 
-            gap: 20px; 
-            padding: 20px;
-        }
-        
-        .left { 
-            flex: 2; 
-        }
-        
-        .right { 
-            flex: 1; 
-        }
-        
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
-            margin-bottom: 20px;
-        }
-        
-        .search-box {
-            padding: 12px 15px;
-            border: 2px solid #dee2e6;
-            border-radius: 25px;
-            width: 100%;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .invite-item {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .invite-item.present {
-            background: #f0fff4;
-            border-left: 4px solid var(--success-color);
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            background: var(--secondary-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-        }
-        
-        .btn:hover {
-            background: #2980b9;
-        }
-        
-        .btn-present {
-            background: var(--success-color);
-            padding: 8px 15px;
-            border-radius: 5px;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .status {
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            text-align: center;
-        }
-        
-        .status-success {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
+        /* VOTRE CSS EXISTANT */
+        :root { --primary-color: #2c3e50; --secondary-color: #3498db; --success-color: #28a745; --danger-color: #dc3545; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        header { background: var(--primary-color); color: white; padding: 20px 30px; }
+        .stats { background: #f8f9fa; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 2px solid #dee2e6; font-size: 16px; font-weight: 600; }
+        .main { display: flex; gap: 20px; margin-top: 0; padding: 20px; }
+        .left { flex: 3; background: white; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef; }
+        .right { flex: 1; background: white; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef; }
+        .search-container { position: relative; margin-bottom: 20px; }
+        .search { width: 100%; padding: 12px 20px 12px 45px; border: 2px solid #dee2e6; border-radius: 25px; font-size: 16px; }
+        .invite-list { max-height: 600px; overflow-y: auto; border-radius: 8px; }
+        .invite { padding: 15px; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
+        .invite.present { background: #d4edda; border-left: 4px solid var(--success-color); }
+        button { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .btn-present { background: var(--success-color); color: white; }
+        .btn-add { background: var(--secondary-color); color: white; width: 100%; padding: 12px; margin-top: 10px; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ced4da; border-radius: 5px; font-size: 14px; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #6c757d; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1 style="margin: 0;">🎓 STANFORD SESSION 1</h1>
-            <p style="margin: 5px 0 0 0; opacity: 0.9;">Gestion des présences professionnelles</p>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div style="width: 60px; height: 60px; background: var(--secondary-color); border-radius: 50%; margin-right: 15px; background-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/Stanford_University_seal_2003.svg/200px-Stanford_University_seal_2003.svg.png'); background-size: cover;"></div>
+                <div>
+                    <h1 style="font-size: 28px; margin: 0; font-weight: 600;" id="appTitle">STANFORD SESSION 1</h1>
+                    <p style="font-size: 14px; opacity: 0.9; margin: 5px 0 0 0;">Gestion des présences professionnelles</p>
+                </div>
+            </div>
         </header>
         
         <div class="stats">
-            <div><strong>Total:</strong> <span id="totalCount">0</span></div>
-            <div style="color:var(--success-color)"><strong>Présents:</strong> <span id="presentCount">0</span></div>
-            <div style="color:#dc3545"><strong>Absents:</strong> <span id="absentCount">0</span></div>
+            <div>Total: <span id="totalCount">0</span></div>
+            <div style="color:var(--success-color)">Présents: <span id="presentCount">0</span></div>
+            <div style="color:var(--danger-color)">Absents: <span id="absentCount">0</span></div>
         </div>
-        
-        <div id="statusMessage" class="status"></div>
         
         <div class="main">
             <div class="left">
-                <div class="card">
-                    <h3 style="margin-top: 0;">📋 Liste des invités</h3>
-                    <input type="text" class="search-box" id="searchInput" placeholder="🔍 Rechercher un invité...">
-                    <div id="invitesList">
-                        <div style="text-align: center; padding: 40px; color: #6c757d;">
-                            ⏳ Chargement des données...
-                        </div>
+                <div class="search-container">
+                    <span>🔍</span>
+                    <input type="text" class="search" id="searchInput" placeholder="Rechercher un invité...">
+                </div>
+                
+                <div class="invite-list" id="invitesList">
+                    <div class="empty-state">
+                        <div>⏳</div>
+                        <h3>Connexion en cours...</h3>
                     </div>
                 </div>
             </div>
             
             <div class="right">
-                <div class="card">
-                    <h3 style="margin-top: 0;">➕ Ajout manuel</h3>
-                    
-                    <select id="civilite">
-                        <option value="M.">Monsieur</option>
-                        <option value="Mme">Madame</option>
-                    </select>
-                    
-                    <input type="text" id="nom" placeholder="Nom et Prénom *" required>
-                    <input type="text" id="entreprise" placeholder="Entreprise *" required>
-                    <input type="text" id="fonction" placeholder="Fonction">
-                    <input type="text" id="table" placeholder="Numéro de table">
-                    
-                    <button class="btn" onclick="ajouterInvite()" id="btnAdd">✅ Enregistrer la présence</button>
-                    
-                    <div style="margin-top: 20px; font-size: 12px; color: #6c757d; text-align: center;">
-                        🔄 Les modifications apparaissent en temps réel sur tous les appareils
-                    </div>
-                </div>
+                <h3 style="color:var(--primary-color); margin-top:0;">➕ AJOUT MANUEL</h3>
+                
+                <input type="text" id="nomComplet" placeholder="Nom et Prénom *" required>
+                <input type="text" id="entreprise" placeholder="Entreprise *" required>
+                <input type="text" id="fonction" placeholder="Fonction">
+                <input type="text" id="table" placeholder="Numéro de table">
+                
+                <button class="btn-add" onclick="ajouterNouvelInvite()">✅ Enregistrer la présence</button>
             </div>
         </div>
     </div>
 
     <script>
-// =================== CONFIGURATION CORRECTE ===================
-// ⚠️ IMPORTANT : UTILISEZ LA BONNE URL !
-const SUPABASE_URL = 'https://kltltapwnhrfapjglfjt.supabase.co';  // ✅ CORRECT
-const SUPABASE_KEY = 'sb_publishable_B5WWj88YTnN9_bXheQBhSw_gltzjIlh';  // ✅ CORRECT
+// === CONFIGURATION SUPABASE SIMPLIFIÉE ===
+const SUPABASE_URL = 'https://kltltapwnhrfapjglfjt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_B5WWj88YTnN9_bXheQBhSw_gltzjIlh';
 
 // Initialiser Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -204,22 +87,18 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Variables
 let invites = [];
 
-// =================== INITIALISATION ===================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Stanford App - URL:', SUPABASE_URL);
-    showStatus('Connexion à la base de données...');
-    loadData();
-    setupRealtime();
-    
-    // Recherche en temps réel
-    document.getElementById('searchInput').addEventListener('input', displayInvites);
+// Charger les données au démarrage
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Démarrage application Stanford...');
+    await chargerDonnees();
+    activerTempsReel();
+    document.getElementById('searchInput').addEventListener('input', chargerInvites);
 });
 
-// =================== CHARGER LES DONNÉES ===================
-async function loadData() {
+// CHARGER LES DONNÉES
+async function chargerDonnees() {
     try {
-        console.log('📥 Chargement depuis:', SUPABASE_URL);
-        
+        console.log('📥 Chargement des données...');
         const { data, error } = await supabase
             .from('invites')
             .select('*')
@@ -227,106 +106,119 @@ async function loadData() {
         
         if (error) {
             console.error('❌ Erreur Supabase:', error);
-            showStatus(`Erreur: ${error.message}`, 'error');
+            document.getElementById('invitesList').innerHTML = `
+                <div class="empty-state">
+                    <div>❌</div>
+                    <h3>Erreur: ${error.message}</h3>
+                    <p>Vérifiez votre connexion</p>
+                </div>
+            `;
             return;
         }
         
         invites = data || [];
         console.log(`✅ ${invites.length} invités chargés`);
         
-        showStatus(`${invites.length} invités chargés`, 'success');
-        displayInvites();
-        updateStats();
+        if (invites.length === 0) {
+            document.getElementById('invitesList').innerHTML = `
+                <div class="empty-state">
+                    <div>📁</div>
+                    <h3>Aucun invité</h3>
+                    <p>Ajoutez votre premier invité</p>
+                </div>
+            `;
+        } else {
+            chargerInvites();
+        }
+        
+        mettreAJourStats();
         
     } catch (error) {
         console.error('💥 Erreur fatale:', error);
-        showStatus(`Erreur: ${error.message}`, 'error');
+        document.getElementById('invitesList').innerHTML = `
+            <div class="empty-state">
+                <div>💥</div>
+                <h3>Erreur critique</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
     }
 }
 
-// =================== AFFICHER LES INVITÉS ===================
-function displayInvites() {
-    const container = document.getElementById('invitesList');
+// ACTIVER TEMPS RÉEL
+function activerTempsReel() {
+    supabase
+        .channel('invites')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'invites' }, 
+            () => {
+                console.log('🔄 Mise à jour temps réel');
+                chargerDonnees();
+            }
+        )
+        .subscribe();
+}
+
+// AFFICHER LES INVITÉS
+function chargerInvites() {
     const search = document.getElementById('searchInput').value.toLowerCase();
+    const liste = document.getElementById('invitesList');
     
-    if (invites.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;">Aucun invité enregistré</div>';
-        return;
-    }
-    
-    // Filtrer
-    const filtered = invites.filter(invite => 
-        (invite.nom && invite.nom.toLowerCase().includes(search)) ||
-        (invite.entreprise && invite.entreprise.toLowerCase().includes(search))
+    const filtres = invites.filter(i => 
+        i.nom?.toLowerCase().includes(search) || 
+        i.entreprise?.toLowerCase().includes(search)
     );
     
-    if (filtered.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;">Aucun résultat</div>';
+    if (filtres.length === 0) {
+        liste.innerHTML = '<div class="empty-state"><div>🔍</div><h3>Aucun résultat</h3></div>';
         return;
     }
     
-    // Générer HTML
     let html = '';
-    filtered.forEach(invite => {
+    filtres.forEach(invite => {
         html += `
-            <div class="invite-item ${invite.present ? 'present' : ''}">
-                <div>
-                    <div style="font-weight: bold; font-size: 16px;">
-                        ${invite.civilite || 'M.'} ${invite.nom || ''}
-                    </div>
-                    <div style="color: #666; margin-top: 5px;">
-                        ${invite.fonction || ''} ${invite.fonction ? '-' : ''} ${invite.entreprise || ''}
-                    </div>
-                    ${invite.table_number ? 
-                        `<div style="background: #e9ecef; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; font-size: 12px;">
-                            🏷️ Table: ${invite.table_number}
-                        </div>` : ''}
+            <div class="invite ${invite.present ? 'present' : ''}">
+                <div style="flex: 1;">
+                    <div style="font-size: 16px; font-weight: 600;">${invite.civilite || 'M.'} ${invite.nom || ''}</div>
+                    <div style="font-size: 14px; color: #6c757d;">${invite.fonction || ''} - ${invite.entreprise || ''}</div>
+                    ${invite.table_number ? `<div style="font-size: 12px; background: #e9ecef; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 5px;">🏷️ ${invite.table_number}</div>` : ''}
                 </div>
-                <button class="btn-present" onclick="togglePresence(${invite.id})" 
-                        style="background: ${invite.present ? '#6c757d' : '#28a745'}">
-                    ${invite.present ? '✓ PRÉSENT' : 'PRÉSENT'}
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-present" onclick="togglePresence(${invite.id})" style="background: ${invite.present ? '#6c757d' : '#28a745'}">
+                        ${invite.present ? '✓ PRÉSENT' : '👤 PRÉSENT'}
+                    </button>
+                </div>
             </div>
         `;
     });
     
-    container.innerHTML = html;
+    liste.innerHTML = html;
+    mettreAJourStats();
 }
 
-// =================== METTRE À JOUR STATS ===================
-function updateStats() {
+// METTRE À JOUR STATS
+function mettreAJourStats() {
     const total = invites.length;
     const presents = invites.filter(i => i.present).length;
-    
     document.getElementById('totalCount').textContent = total;
     document.getElementById('presentCount').textContent = presents;
     document.getElementById('absentCount').textContent = total - presents;
 }
 
-// =================== AJOUTER UN INVITÉ ===================
-async function ajouterInvite() {
-    const civilite = document.getElementById('civilite').value;
-    const nom = document.getElementById('nom').value.trim();
+// AJOUTER UN INVITÉ
+async function ajouterNouvelInvite() {
+    const nom = document.getElementById('nomComplet').value.trim();
     const entreprise = document.getElementById('entreprise').value.trim();
     
     if (!nom || !entreprise) {
-        alert('❌ Le nom et l\'entreprise sont obligatoires');
+        alert("❌ Nom et entreprise requis");
         return;
     }
     
-    // Désactiver bouton
-    const btn = document.getElementById('btnAdd');
-    const originalText = btn.textContent;
-    btn.textContent = '⏳ Ajout en cours...';
-    btn.disabled = true;
-    
     try {
-        console.log('➕ Ajout de:', nom);
-        
+        console.log('➕ Ajout invité...');
         const { error } = await supabase
             .from('invites')
             .insert([{
-                civilite: civilite,
                 nom: nom.toUpperCase(),
                 entreprise: entreprise,
                 fonction: document.getElementById('fonction').value.trim() || '',
@@ -339,31 +231,21 @@ async function ajouterInvite() {
         
         if (error) throw error;
         
-        console.log('✅ Invité ajouté avec succès');
-        
-        // Réinitialiser formulaire
-        document.getElementById('nom').value = '';
+        // Réinitialiser
+        document.getElementById('nomComplet').value = '';
         document.getElementById('entreprise').value = '';
         document.getElementById('fonction').value = '';
         document.getElementById('table').value = '';
-        document.getElementById('nom').focus();
         
-        showStatus(`${civilite} ${nom} ajouté avec succès!`, 'success');
-        
-        // Le temps réel va actualiser automatiquement
+        alert(`✅ ${nom} ajouté !`);
         
     } catch (error) {
         console.error('❌ Erreur ajout:', error);
-        showStatus(`Erreur: ${error.message}`, 'error');
-        alert(`❌ Erreur:\n\n${error.message}`);
-    } finally {
-        // Réactiver bouton
-        btn.textContent = originalText;
-        btn.disabled = false;
+        alert('❌ Erreur: ' + error.message);
     }
 }
 
-// =================== MODIFIER PRÉSENCE ===================
+// MODIFIER PRÉSENCE
 async function togglePresence(id) {
     try {
         const invite = invites.find(i => i.id === id);
@@ -380,59 +262,11 @@ async function togglePresence(id) {
         
         if (error) throw error;
         
-        console.log(`🔄 Présence modifiée pour ID ${id}`);
-        
     } catch (error) {
-        console.error('❌ Erreur modification:', error);
-        showStatus(`Erreur: ${error.message}`, 'error');
+        console.error('❌ Erreur présence:', error);
+        alert('❌ Erreur: ' + error.message);
     }
 }
-
-// =================== TEMPS RÉEL ===================
-function setupRealtime() {
-    console.log('🔔 Activation temps réel...');
-    
-    supabase
-        .channel('stanford-invites')
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'invites' },
-            () => {
-                console.log('🔄 Changement détecté - rechargement');
-                loadData();
-            }
-        )
-        .subscribe();
-}
-
-// =================== AFFICHER STATUT ===================
-function showStatus(message, type = '') {
-    const element = document.getElementById('statusMessage');
-    element.textContent = message;
-    element.className = 'status ' + (type === 'error' ? 'status-error' : type === 'success' ? 'status-success' : '');
-}
-
-// =================== TEST DIRECT AU DÉMARRAGE ===================
-async function testConnection() {
-    try {
-        const response = await fetch(SUPABASE_URL + '/rest/v1/invites?select=count', {
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': 'Bearer ' + SUPABASE_KEY
-            }
-        });
-        
-        if (response.ok) {
-            console.log('✅ Test connexion réussi');
-        } else {
-            console.error('❌ Test connexion échoué:', response.status);
-        }
-    } catch (error) {
-        console.error('💥 Test connexion exception:', error);
-    }
-}
-
-// Lancer le test après 2 secondes
-setTimeout(testConnection, 2000);
     </script>
 </body>
 </html>
