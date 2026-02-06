@@ -9,130 +9,34 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
-            --info-color: #17a2b8;
-        }
-        
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        
-        .container { 
-            max-width: 1400px; 
-            margin: 0 auto; 
-            background: white; 
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        header { 
-            background: var(--primary-color);
-            color: white; 
-            padding: 20px 30px; 
-        }
-        
-        .stats { 
-            background: #f8f9fa; 
-            padding: 15px 30px; 
-            display: flex; 
-            justify-content: space-between;
-            border-bottom: 2px solid #dee2e6;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .main { 
-            display: flex; 
-            gap: 20px; 
-            padding: 20px;
-        }
-        
-        .left { 
-            flex: 3; 
-            background: white; 
-            padding: 25px; 
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-        }
-        
-        .right { 
-            flex: 1; 
-            background: white; 
-            padding: 25px; 
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-        }
-        
-        .search-container {
-            position: relative;
-            margin-bottom: 20px;
-        }
-        
-        .search { 
-            width: 100%; 
-            padding: 12px 20px 12px 45px; 
-            border: 2px solid #dee2e6; 
-            border-radius: 25px; 
-            font-size: 16px;
-        }
-        
-        .invite-list { 
-            max-height: 600px; 
-            overflow-y: auto;
-            border-radius: 8px;
-        }
-        
-        .invite { 
-            padding: 15px; 
-            border-bottom: 1px solid #e9ecef; 
-            display: flex; 
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .invite.present { 
-            background: #d4edda; 
-            border-left: 4px solid var(--success-color);
-        }
-        
-        button { 
-            padding: 8px 15px; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-size: 14px;
-        }
-        
+        /* VOTRE CSS EXISTANT */
+        :root { --primary-color: #2c3e50; --secondary-color: #3498db; --success-color: #28a745; --danger-color: #dc3545; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        header { background: var(--primary-color); color: white; padding: 20px 30px; }
+        .stats { background: #f8f9fa; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 2px solid #dee2e6; font-size: 16px; font-weight: 600; }
+        .main { display: flex; gap: 20px; margin-top: 0; padding: 20px; }
+        .left { flex: 3; background: white; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef; }
+        .right { flex: 1; background: white; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef; }
+        .search-container { position: relative; margin-bottom: 20px; }
+        .search { width: 100%; padding: 12px 20px 12px 45px; border: 2px solid #dee2e6; border-radius: 25px; font-size: 16px; }
+        .invite-list { max-height: 600px; overflow-y: auto; border-radius: 8px; }
+        .invite { padding: 15px; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
+        .invite.present { background: #d4edda; border-left: 4px solid var(--success-color); }
+        button { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
         .btn-present { background: var(--success-color); color: white; }
         .btn-add { background: var(--secondary-color); color: white; width: 100%; padding: 12px; margin-top: 10px; }
-        
-        input, select { 
-            width: 100%; 
-            padding: 10px; 
-            margin: 5px 0 15px 0; 
-            border: 1px solid #ced4da; 
-            border-radius: 5px; 
-            font-size: 14px;
-        }
+        input, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ced4da; border-radius: 5px; font-size: 14px; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #6c757d; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div style="display: flex; align-items: center;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <div style="width: 60px; height: 60px; background: var(--secondary-color); border-radius: 50%; margin-right: 15px; background-image: url('https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/Stanford_University_seal_2003.svg/200px-Stanford_University_seal_2003.svg.png'); background-size: cover;"></div>
                 <div>
-                    <h1 style="font-size: 28px; margin: 0; font-weight: 600;">STANFORD SESSION 1</h1>
+                    <h1 style="font-size: 28px; margin: 0; font-weight: 600;" id="appTitle">STANFORD SESSION 1</h1>
                     <p style="font-size: 14px; opacity: 0.9; margin: 5px 0 0 0;">Gestion des présences professionnelles</p>
                 </div>
             </div>
@@ -147,22 +51,20 @@
         <div class="main">
             <div class="left">
                 <div class="search-container">
-                    <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%);">🔍</span>
-                    <input type="text" class="search" id="searchInput" placeholder="Rechercher un invité..." onkeyup="filterInvites()">
+                    <span>🔍</span>
+                    <input type="text" class="search" id="searchInput" placeholder="Rechercher un invité...">
                 </div>
                 
                 <div class="invite-list" id="invitesList">
-                    <!-- Les invités s'afficheront ici -->
+                    <div class="empty-state">
+                        <div>⏳</div>
+                        <h3>Connexion en cours...</h3>
+                    </div>
                 </div>
             </div>
             
             <div class="right">
                 <h3 style="color:var(--primary-color); margin-top:0;">➕ AJOUT MANUEL</h3>
-                
-                <select id="civilite">
-                    <option value="M.">Monsieur</option>
-                    <option value="Mme">Madame</option>
-                </select>
                 
                 <input type="text" id="nomComplet" placeholder="Nom et Prénom *" required>
                 <input type="text" id="entreprise" placeholder="Entreprise *" required>
@@ -175,28 +77,28 @@
     </div>
 
     <script>
-// ================= CONFIGURATION SUPABASE =================
+// === CONFIGURATION SUPABASE SIMPLIFIÉE ===
 const SUPABASE_URL = 'https://kltltapwnhrfapjglfjt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_B5WWj88YTnN9_bXheQBhSw_gltzjIlh';
 
 // Initialiser Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Variables globales
+// Variables
 let invites = [];
 
-// ================= INITIALISATION =================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Application STANFORD démarrée');
-    loadData();
+// Charger les données au démarrage
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Démarrage application Stanford...');
+    await chargerDonnees();
+    activerTempsReel();
+    document.getElementById('searchInput').addEventListener('input', chargerInvites);
 });
 
-// ================= CHARGER LES DONNÉES =================
-async function loadData() {
-    console.log('📥 Chargement des données...');
-    
+// CHARGER LES DONNÉES
+async function chargerDonnees() {
     try {
-        // Récupérer tous les invités
+        console.log('📥 Chargement des données...');
         const { data, error } = await supabase
             .from('invites')
             .select('*')
@@ -204,168 +106,151 @@ async function loadData() {
         
         if (error) {
             console.error('❌ Erreur Supabase:', error);
-            showError('Erreur de connexion à la base de données');
+            document.getElementById('invitesList').innerHTML = `
+                <div class="empty-state">
+                    <div>❌</div>
+                    <h3>Erreur: ${error.message}</h3>
+                    <p>Vérifiez votre connexion</p>
+                </div>
+            `;
             return;
         }
         
-        console.log(`✅ ${data.length} invités chargés`);
-        invites = data;
+        invites = data || [];
+        console.log(`✅ ${invites.length} invités chargés`);
         
-        // Afficher les invités
-        displayInvites();
+        if (invites.length === 0) {
+            document.getElementById('invitesList').innerHTML = `
+                <div class="empty-state">
+                    <div>📁</div>
+                    <h3>Aucun invité</h3>
+                    <p>Ajoutez votre premier invité</p>
+                </div>
+            `;
+        } else {
+            chargerInvites();
+        }
         
-        // Mettre à jour les statistiques
-        updateStats();
-        
-        // Activer le temps réel
-        setupRealtime();
+        mettreAJourStats();
         
     } catch (error) {
         console.error('💥 Erreur fatale:', error);
-        showError('Erreur inattendue: ' + error.message);
+        document.getElementById('invitesList').innerHTML = `
+            <div class="empty-state">
+                <div>💥</div>
+                <h3>Erreur critique</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
     }
 }
 
-// ================= AFFICHER LES INVITÉS =================
-function displayInvites() {
-    const container = document.getElementById('invitesList');
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+// ACTIVER TEMPS RÉEL
+function activerTempsReel() {
+    supabase
+        .channel('invites')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'invites' }, 
+            () => {
+                console.log('🔄 Mise à jour temps réel');
+                chargerDonnees();
+            }
+        )
+        .subscribe();
+}
+
+// AFFICHER LES INVITÉS
+function chargerInvites() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const liste = document.getElementById('invitesList');
     
-    if (invites.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;">Aucun invité enregistré</div>';
-        return;
-    }
-    
-    // Filtrer selon la recherche
-    const filtered = invites.filter(invite => 
-        (invite.nom && invite.nom.toLowerCase().includes(searchTerm)) ||
-        (invite.entreprise && invite.entreprise.toLowerCase().includes(searchTerm)) ||
-        (invite.fonction && invite.fonction.toLowerCase().includes(searchTerm))
+    const filtres = invites.filter(i => 
+        i.nom?.toLowerCase().includes(search) || 
+        i.entreprise?.toLowerCase().includes(search)
     );
     
-    if (filtered.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;">Aucun résultat pour cette recherche</div>';
+    if (filtres.length === 0) {
+        liste.innerHTML = '<div class="empty-state"><div>🔍</div><h3>Aucun résultat</h3></div>';
         return;
     }
     
-    // Générer le HTML
     let html = '';
-    filtered.forEach(invite => {
+    filtres.forEach(invite => {
         html += `
-            <div class="invite ${invite.present ? 'present' : ''}" data-id="${invite.id}">
+            <div class="invite ${invite.present ? 'present' : ''}">
                 <div style="flex: 1;">
-                    <div style="font-size: 16px; font-weight: 600; margin-bottom: 5px;">
-                        ${invite.civilite || 'M.'} ${invite.nom || ''}
-                    </div>
-                    <div style="font-size: 14px; color: #6c757d; margin-bottom: 3px;">
-                        ${invite.fonction || ''} ${invite.fonction && invite.entreprise ? '-' : ''} ${invite.entreprise || ''}
-                    </div>
-                    ${invite.table_number ? 
-                        `<div style="font-size: 12px; background: #e9ecef; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 5px;">
-                            🏷️ Table: ${invite.table_number}
-                        </div>` : ''}
+                    <div style="font-size: 16px; font-weight: 600;">${invite.civilite || 'M.'} ${invite.nom || ''}</div>
+                    <div style="font-size: 14px; color: #6c757d;">${invite.fonction || ''} - ${invite.entreprise || ''}</div>
+                    ${invite.table_number ? `<div style="font-size: 12px; background: #e9ecef; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 5px;">🏷️ ${invite.table_number}</div>` : ''}
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <button class="btn-present" onclick="togglePresence(${invite.id})" 
-                            style="background: ${invite.present ? '#6c757d' : '#28a745'}">
-                        ${invite.present ? '✓ PRÉSENT' : 'MARQUER PRÉSENT'}
+                    <button class="btn-present" onclick="togglePresence(${invite.id})" style="background: ${invite.present ? '#6c757d' : '#28a745'}">
+                        ${invite.present ? '✓ PRÉSENT' : '👤 PRÉSENT'}
                     </button>
                 </div>
             </div>
         `;
     });
     
-    container.innerHTML = html;
+    liste.innerHTML = html;
+    mettreAJourStats();
 }
 
-// ================= FILTRER LES INVITÉS =================
-function filterInvites() {
-    displayInvites();
-}
-
-// ================= METTRE À JOUR LES STATS =================
-function updateStats() {
+// METTRE À JOUR STATS
+function mettreAJourStats() {
     const total = invites.length;
     const presents = invites.filter(i => i.present).length;
-    
     document.getElementById('totalCount').textContent = total;
     document.getElementById('presentCount').textContent = presents;
     document.getElementById('absentCount').textContent = total - presents;
 }
 
-// ================= AJOUTER UN INVITÉ =================
+// AJOUTER UN INVITÉ
 async function ajouterNouvelInvite() {
-    const civilite = document.getElementById('civilite').value;
     const nom = document.getElementById('nomComplet').value.trim();
     const entreprise = document.getElementById('entreprise').value.trim();
-    const fonction = document.getElementById('fonction').value.trim();
-    const table = document.getElementById('table').value.trim();
     
-    // Validation
     if (!nom || !entreprise) {
-        alert('❌ Le nom et l\'entreprise sont obligatoires');
+        alert("❌ Nom et entreprise requis");
         return;
     }
     
-    // Afficher un message de chargement
-    const oldButtonText = document.querySelector('.btn-add').innerHTML;
-    document.querySelector('.btn-add').innerHTML = '⏳ En cours...';
-    document.querySelector('.btn-add').disabled = true;
-    
     try {
-        console.log('➕ Ajout d\'un nouvel invité:', nom);
-        
-        // Insérer dans Supabase
-        const { data, error } = await supabase
+        console.log('➕ Ajout invité...');
+        const { error } = await supabase
             .from('invites')
             .insert([{
-                civilite: civilite,
                 nom: nom.toUpperCase(),
                 entreprise: entreprise,
-                fonction: fonction || '',
-                table_number: table || '',
+                fonction: document.getElementById('fonction').value.trim() || '',
+                table_number: document.getElementById('table').value.trim() || '',
                 present: true,
                 preinscrit: false,
                 heure_arrivee: new Date().toLocaleTimeString('fr-FR'),
                 date_arrivee: new Date().toLocaleDateString('fr-FR')
-            }])
-            .select();
+            }]);
         
         if (error) throw error;
         
-        console.log('✅ Invité ajouté avec succès:', data);
-        
-        // Réinitialiser le formulaire
+        // Réinitialiser
         document.getElementById('nomComplet').value = '';
         document.getElementById('entreprise').value = '';
         document.getElementById('fonction').value = '';
         document.getElementById('table').value = '';
         
-        // Remettre le focus sur le nom
-        document.getElementById('nomComplet').focus();
-        
-        // Afficher un message de succès
-        alert(`✅ ${civilite} ${nom} a été ajouté avec succès !`);
-        
-        // Le temps réel va automatiquement recharger les données
+        alert(`✅ ${nom} ajouté !`);
         
     } catch (error) {
-        console.error('❌ Erreur lors de l\'ajout:', error);
-        alert(`❌ Erreur: ${error.message}`);
-        
-    } finally {
-        // Restaurer le bouton
-        document.querySelector('.btn-add').innerHTML = oldButtonText;
-        document.querySelector('.btn-add').disabled = false;
+        console.error('❌ Erreur ajout:', error);
+        alert('❌ Erreur: ' + error.message);
     }
 }
 
-// ================= MODIFIER LA PRÉSENCE =================
+// MODIFIER PRÉSENCE
 async function togglePresence(id) {
-    const invite = invites.find(i => i.id === id);
-    if (!invite) return;
-    
     try {
+        const invite = invites.find(i => i.id === id);
+        if (!invite) return;
+        
         const { error } = await supabase
             .from('invites')
             .update({
@@ -377,45 +262,10 @@ async function togglePresence(id) {
         
         if (error) throw error;
         
-        console.log(`🔄 Présence modifiée pour l'invité ${id}`);
-        
     } catch (error) {
-        console.error('❌ Erreur modification présence:', error);
+        console.error('❌ Erreur présence:', error);
         alert('❌ Erreur: ' + error.message);
     }
-}
-
-// ================= TEMPS RÉEL =================
-function setupRealtime() {
-    console.log('🔔 Activation du temps réel...');
-    
-    const subscription = supabase
-        .channel('invites-channel')
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'invites' },
-            () => {
-                console.log('🔄 Changement détecté - rechargement des données');
-                loadData();
-            }
-        )
-        .subscribe();
-    
-    return subscription;
-}
-
-// ================= AFFICHER UNE ERREUR =================
-function showError(message) {
-    const container = document.getElementById('invitesList');
-    container.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: #dc3545;">
-            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
-            <h3>Erreur</h3>
-            <p>${message}</p>
-            <button onclick="loadData()" style="margin-top: 20px; padding: 10px 20px; background: var(--secondary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">
-                Réessayer
-            </button>
-        </div>
-    `;
 }
     </script>
 </body>
