@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STANFORD SESSION 1 - Gestion des Présences (Temps Réel)</title>
+    <title>STANFORD SESSION 1 - Gestion des Présences</title>
     
-    <!-- SUPPRIMER FIREBASE ET AJOUTER SUPABASE -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <!-- SUPABASE SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
@@ -358,48 +358,23 @@
             .main { flex-direction: column; }
             .left, .right { width: 100%; }
         }
-        
-        /* Indicateur de connexion */
-        .connection-status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            z-index: 1001;
-        }
-        .connected { background: #28a745; color: white; }
-        .disconnected { background: #dc3545; color: white; }
-        
-        /* Animation pour les nouveaux arrivants */
-        .new-arrival {
-            animation: highlight 2s ease;
-        }
-        
-        @keyframes highlight {
-            0% { background-color: #fff3cd; }
-            100% { background-color: inherit; }
-        }
     </style>
 </head>
 <body>
-    <div class="connection-status disconnected" id="connectionStatus">🔴 Déconnecté</div>
-    
     <div class="container">
         <header>
             <div class="logo-container">
                 <div class="logo" id="appLogo">S1</div>
                 <div>
                     <h1 class="app-title" id="appTitle">STANFORD SESSION 1</h1>
-                    <p class="app-subtitle">Gestion des présences professionnelles - TEMPS RÉEL</p>
+                    <p class="app-subtitle">Gestion des présences professionnelles</p>
                 </div>
             </div>
             
             <div class="header-buttons">
                 <label class="file-label">
                     📁 <span>IMPORTER LISTE CSV</span>
-                    <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.xls" onchange="importerFichier(event)">
+                    <input type="file" id="fileInput" class="file-input" accept=".csv" onchange="importerFichier(event)">
                 </label>
                 <button class="btn-export" onclick="exporterDonnees()">
                     📥 EXPORTER PRÉSENCES
@@ -417,7 +392,6 @@
             <div>Total: <span id="totalCount">0</span></div>
             <div style="color:var(--success-color)">Présents: <span id="presentCount">0</span></div>
             <div style="color:var(--danger-color)">Absents: <span id="absentCount">0</span></div>
-            <div style="color:var(--info-color)">En ligne: <span id="onlineCount">1</span></div>
         </div>
         
         <div class="main">
@@ -429,9 +403,9 @@
                 
                 <div class="invite-list" id="invitesList">
                     <div class="empty-state">
-                        <div class="empty-state-icon">📁</div>
+                        <div class="empty-state-icon">⏳</div>
                         <h3>Connexion en cours...</h3>
-                        <p>Chargement des données depuis Supabase</p>
+                        <p>Chargement des données</p>
                     </div>
                 </div>
             </div>
@@ -471,9 +445,6 @@
                     <label>Nom de l'événement</label>
                     <input type="text" id="eventName" value="STANFORD SESSION 1" onchange="changerNomEvenement()">
                     
-                    <label>Logo (URL de l'image)</label>
-                    <input type="text" id="logoUrl" placeholder="https://..." onchange="changerLogo()">
-                    
                     <div style="margin-top:15px;">
                         <label>Couleur du thème</label>
                         <div class="color-picker">
@@ -481,7 +452,6 @@
                             <div class="color-option" style="background:#3498db;" onclick="changerCouleur('#3498db')"></div>
                             <div class="color-option" style="background:#e74c3c;" onclick="changerCouleur('#e74c3c')"></div>
                             <div class="color-option" style="background:#2ecc71;" onclick="changerCouleur('#2ecc71')"></div>
-                            <div class="color-option" style="background:#9b59b6;" onclick="changerCouleur('#9b59b6')"></div>
                         </div>
                     </div>
                 </div>
@@ -528,21 +498,12 @@
     </div>
 
     <script>
-// === CONFIGURATION SUPABASE AVEC VOS CLÉS ===
-const SUPABASE_CONFIG = {
-    // REMPLACEZ AVEC VOTRE PROJECT URL - vérifiez dans la barre d'adresse Supabase
-    // Format: https://[votre-id].supabase.co
-    url: 'https://tonifymideraantra-star.supabase.co',
-    
-    // VOTRE PUBLISHABLE KEY
-    key: 'sb_publishable_B5WWj88YTnN9_bXheQBhSw_gltzjIlh'
-};
+// === CONFIGURATION SUPABASE CORRECTE ===
+const SUPABASE_URL = 'https://kltltapwnhrfapjglfjt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_B5WWj88YTnN9_bXheQBhSw_gltzjIlh';
 
 // Initialiser Supabase
-const supabase = window.supabase.createClient(
-    SUPABASE_CONFIG.url,
-    SUPABASE_CONFIG.key
-);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Variables globales
 let invites = [];
@@ -550,10 +511,7 @@ let realtimeSubscription = null;
 
 // === INITIALISATION ===
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 Application STANFORD - Initialisation Supabase');
-    
-    // Tester la connexion
-    await testerConnexionSupabase();
+    console.log('🚀 Application STANFORD - Initialisation');
     
     // Charger les données initiales
     await chargerDonnees();
@@ -566,108 +524,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Charger les paramètres
     chargerParametres();
-    
-    console.log('✅ Application prête avec temps réel!');
 });
-
-// === TESTER LA CONNEXION SUPABASE ===
-async function testerConnexionSupabase() {
-    const statusElement = document.getElementById('connectionStatus');
-    
-    try {
-        // Test simple de connexion
-        const { data, error } = await supabase
-            .from('invites')
-            .select('id')
-            .limit(1);
-        
-        if (error) {
-            if (error.message.includes('relation "invites" does not exist')) {
-                console.warn('⚠️ Table "invites" non trouvée');
-                statusElement.textContent = "⚠️ Table manquante";
-                statusElement.className = "connection-status disconnected";
-                
-                // Proposer de créer la table
-                if (confirm('La table "invites" n\'existe pas. Voulez-vous créer la table maintenant ?')) {
-                    creerTableInvites();
-                }
-                return false;
-            }
-            throw error;
-        }
-        
-        console.log('✅ Connexion Supabase réussie!');
-        statusElement.textContent = "✅ Connecté à Supabase";
-        statusElement.className = "connection-status connected";
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Erreur connexion Supabase:', error);
-        statusElement.textContent = "❌ Erreur connexion";
-        statusElement.className = "connection-status disconnected";
-        return false;
-    }
-}
-
-// === CRÉER LA TABLE INVITES (si elle n'existe pas) ===
-async function creerTableInvites() {
-    console.log('🛠️ Création de la table invites...');
-    
-    // Ouvrir l'éditeur SQL
-    const projectId = SUPABASE_CONFIG.url.split('//')[1].split('.')[0];
-    window.open(`https://app.supabase.com/project/${projectId}/sql`, '_blank');
-    
-    // Code SQL à copier dans l'éditeur
-    const sqlCode = `-- Créer la table invites pour l'application Stanford
-CREATE TABLE IF NOT EXISTS invites (
-  id BIGSERIAL PRIMARY KEY,
-  civilite VARCHAR(10) DEFAULT 'M.',
-  nom VARCHAR(255) NOT NULL,
-  fonction VARCHAR(255),
-  entreprise VARCHAR(255) NOT NULL,
-  email VARCHAR(255),
-  table_number VARCHAR(50),
-  present BOOLEAN DEFAULT false,
-  preinscrit BOOLEAN DEFAULT false,
-  heure_arrivee VARCHAR(20),
-  date_arrivee VARCHAR(20),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
--- Désactiver la sécurité pour les tests
-ALTER TABLE invites DISABLE ROW LEVEL SECURITY;
-
--- Créer un trigger pour updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = TIMEZONE('utc'::text, NOW());
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_invites_updated_at 
-    BEFORE UPDATE ON invites
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();`;
-    
-    alert(`Copiez ce code SQL dans l'éditeur Supabase:\n\n${sqlCode}`);
-}
 
 // === CHARGER LES DONNÉES ===
 async function chargerDonnees() {
-    const listeElement = document.getElementById('invitesList');
+    const liste = document.getElementById('invitesList');
     
     try {
-        listeElement.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">⏳</div>
-                <h3>Chargement en cours...</h3>
-                <p>Connexion à la base de données</p>
-            </div>
-        `;
-        
         const { data, error } = await supabase
             .from('invites')
             .select('*')
@@ -675,7 +538,7 @@ async function chargerDonnees() {
         
         if (error) throw error;
         
-        // Convertir le format Supabase → format app
+        // Convertir le format
         invites = data.map(item => ({
             id: item.id,
             civilite: item.civilite || 'M.',
@@ -687,14 +550,13 @@ async function chargerDonnees() {
             present: item.present || false,
             preinscrit: item.preinscrit || false,
             heureArrivee: item.heure_arrivee || '',
-            dateArrivee: item.date_arrivee || '',
-            created_at: item.created_at
+            dateArrivee: item.date_arrivee || ''
         }));
         
         console.log(`✅ ${invites.length} invités chargés`);
         
         if (invites.length === 0) {
-            listeElement.innerHTML = `
+            liste.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">📁</div>
                     <h3>Aucun invité enregistré</h3>
@@ -709,11 +571,11 @@ async function chargerDonnees() {
         
     } catch (error) {
         console.error('❌ Erreur chargement:', error);
-        listeElement.innerHTML = `
+        liste.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">❌</div>
                 <h3>Erreur de connexion</h3>
-                <p>Impossible de charger les données: ${error.message}</p>
+                <p>${error.message}</p>
                 <button onclick="chargerDonnees()" style="margin-top: 20px; padding: 10px 20px; background: var(--secondary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">
                     Réessayer
                 </button>
@@ -724,105 +586,24 @@ async function chargerDonnees() {
 
 // === ACTIVER LE TEMPS RÉEL ===
 function activerTempsReel() {
-    console.log('🔔 Activation du temps réel...');
-    
-    // Désabonner si déjà abonné
-    if (realtimeSubscription) {
-        supabase.removeChannel(realtimeSubscription);
-    }
+    console.log('🔔 Activation temps réel...');
     
     // S'abonner aux changements
     realtimeSubscription = supabase
-        .channel('invites-realtime')
-        .on(
-            'postgres_changes',
-            {
-                event: '*',
-                schema: 'public',
-                table: 'invites'
-            },
+        .channel('invites-channel')
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'invites' },
             async (payload) => {
-                console.log('🔄 Changement temps réel:', payload);
+                console.log('🔄 Changement détecté:', payload.eventType);
                 
-                // Mettre à jour en fonction du type d'événement
-                switch(payload.eventType) {
-                    case 'INSERT':
-                        // Ajouter le nouvel invité
-                        const nouvelInvite = {
-                            id: payload.new.id,
-                            civilite: payload.new.civilite || 'M.',
-                            nom: payload.new.nom || '',
-                            fonction: payload.new.fonction || '',
-                            entreprise: payload.new.entreprise || '',
-                            email: payload.new.email || '',
-                            table: payload.new.table_number || '',
-                            present: payload.new.present || false,
-                            preinscrit: payload.new.preinscrit || false,
-                            heureArrivee: payload.new.heure_arrivee || '',
-                            dateArrivee: payload.new.date_arrivee || '',
-                            created_at: payload.new.created_at
-                        };
-                        
-                        invites.unshift(nouvelInvite);
-                        
-                        // Animation pour le nouvel arrivant
-                        setTimeout(() => {
-                            const inviteElement = document.querySelector(`[data-id="${nouvelInvite.id}"]`);
-                            if (inviteElement) {
-                                inviteElement.classList.add('new-arrival');
-                            }
-                        }, 100);
-                        break;
-                        
-                    case 'UPDATE':
-                        // Mettre à jour l'invité existant
-                        const index = invites.findIndex(i => i.id === payload.new.id);
-                        if (index !== -1) {
-                            invites[index] = {
-                                ...invites[index],
-                                civilite: payload.new.civilite || invites[index].civilite,
-                                nom: payload.new.nom || invites[index].nom,
-                                fonction: payload.new.fonction || invites[index].fonction,
-                                entreprise: payload.new.entreprise || invites[index].entreprise,
-                                email: payload.new.email || invites[index].email,
-                                table: payload.new.table_number || invites[index].table,
-                                present: payload.new.present !== undefined ? payload.new.present : invites[index].present,
-                                preinscrit: payload.new.preinscrit !== undefined ? payload.new.preinscrit : invites[index].preinscrit,
-                                heureArrivee: payload.new.heure_arrivee || invites[index].heureArrivee,
-                                dateArrivee: payload.new.date_arrivee || invites[index].dateArrivee
-                            };
-                        }
-                        break;
-                        
-                    case 'DELETE':
-                        // Supprimer l'invité
-                        invites = invites.filter(i => i.id !== payload.old.id);
-                        break;
-                }
-                
-                // Rafraîchir l'affichage
-                chargerInvites();
-                mettreAJourStats();
-                
-                // Mettre à jour le compteur en ligne
-                mettreAJourCompteurEnLigne();
+                // Recharger les données
+                await chargerDonnees();
             }
         )
-        .subscribe((status) => {
-            const statusElement = document.getElementById('connectionStatus');
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ Temps réel activé!');
-                statusElement.textContent = "✅ Connecté en temps réel";
-                statusElement.className = "connection-status connected";
-            } else if (status === 'CHANNEL_ERROR') {
-                console.warn('⚠️ Erreur canal temps réel');
-                statusElement.textContent = "⚠️ Erreur temps réel";
-                statusElement.className = "connection-status disconnected";
-            }
-        });
+        .subscribe();
 }
 
-// === CHARGER LA LISTE DES INVITÉS (interface) ===
+// === AFFICHER LA LISTE DES INVITÉS ===
 function chargerInvites() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const liste = document.getElementById('invitesList');
@@ -832,10 +613,9 @@ function chargerInvites() {
             <div class="empty-state">
                 <div class="empty-state-icon">📁</div>
                 <h3>Aucun invité enregistré</h3>
-                <p>Ajoutez votre premier invité ou importez un fichier CSV</p>
+                <p>Commencez par ajouter des invités</p>
             </div>
         `;
-        mettreAJourStats();
         return;
     }
     
@@ -848,8 +628,13 @@ function chargerInvites() {
     );
     
     if (filtres.length === 0) {
-        liste.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><h3>Aucun résultat</h3><p>Aucun invité ne correspond à votre recherche</p></div>';
-        mettreAJourStats();
+        liste.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                <h3>Aucun résultat</h3>
+                <p>Aucun invité ne correspond à votre recherche</p>
+            </div>
+        `;
         return;
     }
     
@@ -862,11 +647,10 @@ function chargerInvites() {
                     <div class="invite-details">${invite.fonction} - ${invite.entreprise}</div>
                     ${invite.table ? `<div class="invite-table">🏷️ Table: ${invite.table}</div>` : ''}
                     ${invite.email ? `<div class="invite-email">📧 ${invite.email}</div>` : ''}
-                    ${invite.present ? `<div class="invite-email">🕐 Arrivé à ${invite.heureArrivee} (${invite.dateArrivee})</div>` : ''}
                 </div>
                 <div class="invite-actions">
                     <button class="btn-present ${invite.present ? 'checked' : ''}" onclick="togglePresence(${invite.id})">
-                        ${invite.present ? '✓' : '👤'} ${invite.present ? 'PRÉSENT' : 'MARQUER'}
+                        ${invite.present ? '✓' : '👤'} ${invite.present ? 'PRÉSENT' : 'PRÉSENT'}
                     </button>
                     <button class="btn-edit" onclick="ouvrirModalModification(${invite.id})">
                         ✏️
@@ -892,14 +676,7 @@ function mettreAJourStats() {
     document.getElementById('absentCount').textContent = total - presents;
 }
 
-// === METTRE À JOUR LE COMPTEUR EN LIGNE ===
-function mettreAJourCompteurEnLigne() {
-    // Pour le moment, on simule 1 utilisateur
-    // Plus tard, on pourrait utiliser Supabase Presence
-    document.getElementById('onlineCount').textContent = "1+";
-}
-
-// === AJOUTER UN NOUVEL INVITÉ ===
+// === AJOUTER UN INVITÉ ===
 async function ajouterNouvelInvite() {
     const civilite = document.getElementById('civilite').value;
     const nom = document.getElementById('nomComplet').value.trim();
@@ -929,8 +706,7 @@ async function ajouterNouvelInvite() {
                     heure_arrivee: new Date().toLocaleTimeString('fr-FR'),
                     date_arrivee: new Date().toLocaleDateString('fr-FR')
                 }
-            ])
-            .select();
+            ]);
         
         if (error) throw error;
         
@@ -941,14 +717,11 @@ async function ajouterNouvelInvite() {
         document.getElementById('email').value = '';
         document.getElementById('table').value = '';
         
-        console.log('✅ Invité ajouté:', data);
-        
-        // Pas besoin de recharger - le temps réel s'en chargera
         alert(`✅ ${civilite} ${nom} ajouté(e) avec succès !`);
         
     } catch (error) {
         console.error('❌ Erreur ajout:', error);
-        alert(`❌ Erreur lors de l'ajout: ${error.message}`);
+        alert('❌ Erreur: ' + error.message);
     }
 }
 
@@ -967,4 +740,234 @@ async function togglePresence(id) {
             })
             .eq('id', id);
         
-        if (
+        if (error) throw error;
+        
+    } catch (error) {
+        console.error('❌ Erreur présence:', error);
+        alert('❌ Erreur: ' + error.message);
+    }
+}
+
+// === OUVRIR MODAL MODIFICATION ===
+function ouvrirModalModification(id) {
+    const invite = invites.find(i => i.id === id);
+    if (invite) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editCivilite').value = invite.civilite;
+        document.getElementById('editNom').value = invite.nom;
+        document.getElementById('editFonction').value = invite.fonction;
+        document.getElementById('editEntreprise').value = invite.entreprise;
+        document.getElementById('editEmail').value = invite.email || '';
+        document.getElementById('editTable').value = invite.table || '';
+        document.getElementById('editModal').style.display = 'flex';
+    }
+}
+
+// === SAUVEGARDER MODIFICATION ===
+async function sauvegarderModification() {
+    const id = document.getElementById('editId').value;
+    
+    try {
+        const { error } = await supabase
+            .from('invites')
+            .update({
+                civilite: document.getElementById('editCivilite').value,
+                nom: document.getElementById('editNom').value.toUpperCase(),
+                fonction: document.getElementById('editFonction').value,
+                entreprise: document.getElementById('editEntreprise').value,
+                email: document.getElementById('editEmail').value || null,
+                table_number: document.getElementById('editTable').value || null
+            })
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        fermerModal();
+        alert('✅ Invité modifié !');
+        
+    } catch (error) {
+        console.error('❌ Erreur modification:', error);
+        alert('❌ Erreur: ' + error.message);
+    }
+}
+
+// === SUPPRIMER INVITÉ ===
+async function supprimerInvite(id) {
+    if (!confirm('⚠️ Supprimer cet invité ?')) return;
+    
+    try {
+        const { error } = await supabase
+            .from('invites')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        alert('✅ Invité supprimé !');
+        
+    } catch (error) {
+        console.error('❌ Erreur suppression:', error);
+        alert('❌ Erreur: ' + error.message);
+    }
+}
+
+// === FERMER MODAL ===
+function fermerModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// === EXPORTER DONNÉES ===
+async function exporterDonnees() {
+    try {
+        const { data, error } = await supabase
+            .from('invites')
+            .select('*');
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            alert("❌ Aucune donnée à exporter");
+            return;
+        }
+        
+        let csv = "Civilité;Nom;Fonction;Entreprise;Email;Table;Présent;Pré-inscrit;Heure arrivée;Date arrivée\n";
+        
+        data.forEach(invite => {
+            csv += `"${invite.civilite || ''}";"${invite.nom || ''}";"${invite.fonction || ''}";"${invite.entreprise || ''}";"${invite.email || ''}";"${invite.table_number || ''}";"${invite.present ? 'Oui' : 'Non'}";"${invite.preinscrit ? 'Oui' : 'Non'}";"${invite.heure_arrivee || ''}";"${invite.date_arrivee || ''}"\n`;
+        });
+        
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `presences_stanford_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        
+        alert(`✅ ${data.length} invités exportés !`);
+        
+    } catch (error) {
+        console.error('❌ Erreur export:', error);
+        alert('❌ Erreur: ' + error.message);
+    }
+}
+
+// === IMPORT CSV ===
+async function importerFichier(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const csvText = e.target.result;
+        await traiterCSV(csvText);
+    };
+    
+    if (file.name.endsWith('.csv')) {
+        reader.readAsText(file, 'UTF-8');
+    } else {
+        alert("❌ Format non supporté. Utilisez un fichier CSV.");
+    }
+}
+
+async function traiterCSV(csvText) {
+    const lignes = csvText.split('\n');
+    const separateur = csvText.includes(';') ? ';' : ',';
+    const nouveauxInvites = [];
+    
+    for (let i = 0; i < lignes.length; i++) {
+        const ligne = lignes[i].trim();
+        if (!ligne || ligne.startsWith('"')) continue;
+        
+        const colonnes = ligne.split(separateur).map(c => c.trim().replace(/"/g, ''));
+        
+        if (colonnes.length >= 4) {
+            nouveauxInvites.push({
+                civilite: colonnes[0] || "M.",
+                nom: (colonnes[1] || "").toUpperCase(),
+                fonction: colonnes[2] || "",
+                entreprise: colonnes[3] || "",
+                email: colonnes[4] || null,
+                table_number: colonnes[5] || null,
+                present: false,
+                preinscrit: true
+            });
+        }
+    }
+    
+    if (nouveauxInvites.length > 0) {
+        try {
+            const { error } = await supabase
+                .from('invites')
+                .insert(nouveauxInvites);
+            
+            if (error) throw error;
+            
+            alert(`✅ ${nouveauxInvites.length} invités importés !`);
+            
+        } catch (error) {
+            console.error('❌ Erreur import:', error);
+            alert('❌ Erreur: ' + error.message);
+        }
+    }
+}
+
+// === RÉINITIALISER ===
+async function reinitialiserListe() {
+    if (!confirm("⚠️ Effacer TOUTES les données ?")) return;
+    
+    try {
+        const { error } = await supabase
+            .from('invites')
+            .delete()
+            .neq('id', 0);
+        
+        if (error) throw error;
+        
+        invites = [];
+        chargerInvites();
+        mettreAJourStats();
+        
+        alert("✅ Liste réinitialisée !");
+        
+    } catch (error) {
+        console.error('❌ Erreur réinitialisation:', error);
+        alert('❌ Erreur: ' + error.message);
+    }
+}
+
+// === CHARGER PARAMÈTRES ===
+function chargerParametres() {
+    const eventName = localStorage.getItem('stanford_eventName');
+    const primaryColor = localStorage.getItem('stanford_primaryColor');
+    
+    if (eventName) document.getElementById('appTitle').textContent = eventName;
+    if (eventName) document.getElementById('eventName').value = eventName;
+    if (primaryColor) changerCouleur(primaryColor, false);
+}
+
+function changerNomEvenement() {
+    const newName = document.getElementById('eventName').value;
+    document.getElementById('appTitle').textContent = newName;
+    localStorage.setItem('stanford_eventName', newName);
+}
+
+function changerCouleur(color, save = true) {
+    document.documentElement.style.setProperty('--primary-color', color);
+    
+    document.querySelectorAll('.color-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.style.backgroundColor === color) {
+            opt.classList.add('selected');
+        }
+    });
+    
+    if (save) {
+        localStorage.setItem('stanford_primaryColor', color);
+    }
+}
+
+function ouvrirSettings() {
+    alert("⚙️ Les paramètres sont disponibles dans le panneau à droite.\n\nVous pouvez :\n- Changer le nom de l'événement\n- Modifier la couleur du thème");
+}
+    </script>
+</body>
+</html>
